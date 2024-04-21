@@ -1,0 +1,3 @@
+[submodule "measure_duration"]
+	path = measure_duration
+	url = https://github.com/water-chika/measure_duration
