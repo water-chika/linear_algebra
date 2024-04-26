@@ -22,8 +22,10 @@ namespace linear_algebra {
 			matrix_index.get_column();
 		};
 		template <class Matrix>
-		concept matrix = requires (Matrix m) {
+		concept matrix = requires (Matrix m, int i) {
 			{ m.size() } -> matrix_size;
+			m.column(i);
+			m.row(i);
 		};
 	}
 	template<class T>
