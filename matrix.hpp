@@ -3,6 +3,50 @@
 #include <algorithm>
 
 namespace linear_algebra {
+	namespace concept_helper {
+		template <class Matrix_Size>
+		concept matrix_size = requires (Matrix_Size matrix_size) {
+			matrix_size.get_column();
+			matrix_size.get_row();
+		};
+		template<class Matrix_Element>
+		concept matrix_element = requires (Matrix_Element matrix_element) {
+			matrix_element* matrix_element;
+			matrix_element + matrix_element;
+			matrix_element - matrix_element;
+			matrix_element / matrix_element;
+		};
+		template<class Matrix_Index>
+		concept matrix_index = requires (Matrix_Index matrix_index) {
+			matrix_index.get_row();
+			matrix_index.get_column();
+		};
+		template <class Matrix>
+		concept matrix = requires (Matrix m) {
+			{ m.size() } -> matrix_size;
+		};
+	}
+	template<class T>
+	class matrix_index {
+	public:
+		auto set_row(T row) {
+			m_row = row;
+			return *this;
+		}
+		auto set_column(T column) {
+			m_column = column;
+			return *this;
+		}
+		auto get_row() const {
+			return m_row;
+		}
+		auto get_column() const {
+			return m_column;
+		}
+	private:
+		T m_row;
+		T m_column;
+	};
 	template<class T, size_t size>
 	class column_vector : public vector<T, size> {
 	public:
@@ -34,6 +78,12 @@ namespace linear_algebra {
 		}
 		static auto create_matrix_by_get_element(auto&& get_element) {
 			return matrix{ create_columns_by_get_element(get_element) };
+		}
+		auto& operator[](concept_helper::matrix_index auto&& i) {
+			return m_columns[i.get_column()][i.get_row()];
+		}
+		auto size() const {
+			return matrix_index<size_t>{}.set_column(Columns).set_row(Rows);
 		}
 	private:
 		static auto create_columns_by_get_element(auto&& get_element) {
