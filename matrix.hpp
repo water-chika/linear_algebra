@@ -108,4 +108,27 @@ namespace linear_algebra {
 			}
 		);
 	}
+
+	template<std::integral Int>
+	void for_index_range(std::convertible_to<Int> auto&& begin, Int end, std::invocable<Int> auto&& f) {
+		for (Int i = begin; i < end; i++) {
+			f(i);
+		}
+	}
+
+	template<concept_helper::matrix Matrix>
+	Matrix eliminate(Matrix&& A) {
+		Matrix res = A;
+		for_index_range(0, res.size().get_column(),
+			[&res](auto column) {
+				for_index_range(column+1, res.size().get_row(),
+				[&res, column](auto row) {
+						auto pivot = res[matrix_index<decltype(column)>{}.set_column(column).set_row(column)];
+						assert(pivot != 0);
+						auto multi = res[matrix_index<decltype(column)>{}.set_column(column).set_row(row)] / pivot;
+						res.row_subtract(row, column, multi);
+					});
+			});
+		return res;
+	}
 }

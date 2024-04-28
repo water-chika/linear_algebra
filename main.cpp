@@ -17,7 +17,7 @@ auto& operator<<(std::ostream& out, linear_algebra::concept_helper::matrix auto&
 			out << "|";
 			iterate_from_0_to(m.size().get_column(),
 			[&out, &m, &row](auto column) {
-					out << std::setw(4) << m[linear_algebra::matrix_index<decltype(row)>{}.set_row(row).set_column(column)];
+					out << std::setw(8) << m[linear_algebra::matrix_index<decltype(row)>{}.set_row(row).set_column(column)] << " ";
 				});
 			out << "|" << std::endl;
 		});
@@ -52,6 +52,9 @@ public:
 				std::cout << A.row(1) << std::endl;
 				A.row_subtract(1, 0, 2);
 				std::cout << "After subtract 2 * row 0 from row 1, A is below: " << A << std::endl;
+				
+				auto U = linear_algebra::eliminate(A);
+				std::cout << "The elimination U of A is below: " << U << std::endl;
 
 				auto large_matrix_100_101 = linear_algebra::matrix<Number, 100, 101>::create_matrix_by_get_element(
 					[](Integral row, Integral col) {
