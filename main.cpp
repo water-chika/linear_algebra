@@ -71,6 +71,17 @@ public:
 						large_matrix_100_101* large_matrix_101_100;
 					});
 				std::cout << std::chrono::duration_cast<std::chrono::milliseconds>(duration) << std::endl;
+
+				{
+					using namespace linear_algebra;
+					auto A_I = make_matrix_with_columns<double, 3, 6>({vector<double, 3>{2,1,1}, vector<double, 3>{1,2,1}, vector<double, 3>{1,1,2},
+						vector<double, 3>{1,0,0}, vector<double, 3>{0,1,0}, vector<double, 3>{0,0,1}});
+					std::cout << "set A_I = " << A_I << std::endl;
+					auto res = eliminate(A_I);
+					std::cout << "after eliminate, it =" << res << std::endl;
+					res = back_substitution(res);
+					std::cout << "after back substitution, it =" << res << std::endl;
+				}
 			}
 		};
 	};

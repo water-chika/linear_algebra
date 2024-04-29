@@ -82,6 +82,11 @@ namespace linear_algebra {
 				m_columns[k][i] -= multi * m_columns[k][j];
 			}
 		}
+		void row_mul(size_t i, T multi) {
+			for (size_t k = 0; k < Columns; k++) {
+				m_columns[k][i] *= multi;
+			}
+		}
 		static auto create_matrix_by_get_element(auto&& get_element) {
 			return matrix{ create_columns_by_get_element(get_element) };
 		}
@@ -103,6 +108,15 @@ namespace linear_algebra {
 		}
 		std::array<column_vector<T, m>, n> m_columns;
 	};
+
+	template<class T, size_t Rows, size_t Columns>
+	auto make_matrix_with_columns(std::initializer_list<vector<T, Rows>> columns) {
+		matrix<T, Rows, Columns> res{};
+		for (int i = 0; i < columns.size(); i++) {
+			res.column(i) = *(columns.begin() + i);
+		}
+		return res;
+	}
 
 	template<class T, size_t m, size_t n, size_t p>
 	auto operator*(matrix<T, m, n> lhs, matrix<T, n, p> rhs) {
@@ -139,6 +153,28 @@ namespace linear_algebra {
 						res = eliminate(res, make_matrix_pivot_index(column).set_row(row));
 					});
 			});
+		return res;
+	}
+	
+	template<concept_helper::matrix Matrix>
+	Matrix back_substitution(Matrix&& A) {
+		Matrix res = A;
+		for (auto row = res.size().get_row() - 1; true; row--) {
+			for (auto column = res.size().get_row() - 1; true; column--) {
+				if (column != row) {
+					res.row_subtract(row, column, res[matrix_index<decltype(row)>{}.set_row(row).set_column(column)]);
+				}
+				else {
+					res.row_mul(row, 1.0/res[make_matrix_pivot_index(row)]);
+				}
+				if (column == row) {
+					break;
+				}
+			}
+			if (row == 0) {
+				break;
+			}
+		}
 		return res;
 	}
 }
