@@ -49,6 +49,10 @@ namespace linear_algebra {
 		T m_row;
 		T m_column;
 	};
+	template<class T>
+	auto make_matrix_pivot_index(T i) {
+		return matrix_index<T>{}.set_row(i).set_column(i);
+	}
 	template<class T, size_t size>
 	class column_vector : public vector<T, size> {
 	public:
@@ -116,6 +120,15 @@ namespace linear_algebra {
 		}
 	}
 
+	auto eliminate(concept_helper::matrix auto&& A, concept_helper::matrix_index auto&& index) {
+		auto column = index.get_column();
+		auto row = index.get_row();
+		auto multier = A[index] / A[make_matrix_pivot_index(column)];
+		auto EA = A;
+		EA.row_subtract(row, column, multier);
+		return EA;
+	}
+
 	template<concept_helper::matrix Matrix>
 	Matrix eliminate(Matrix&& A) {
 		Matrix res = A;
@@ -123,10 +136,7 @@ namespace linear_algebra {
 			[&res](auto column) {
 				for_index_range(column+1, res.size().get_row(),
 				[&res, column](auto row) {
-						auto pivot = res[matrix_index<decltype(column)>{}.set_column(column).set_row(column)];
-						assert(pivot != 0);
-						auto multi = res[matrix_index<decltype(column)>{}.set_column(column).set_row(row)] / pivot;
-						res.row_subtract(row, column, multi);
+						res = eliminate(res, make_matrix_pivot_index(column).set_row(row));
 					});
 			});
 		return res;
