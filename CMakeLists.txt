@@ -4,10 +4,16 @@ project(linear_algebra)
 
 add_subdirectory(measure_duration)
 
-add_executable(test
-    main.cpp
+add_library(
+    linear_algebra
+    matrix.hpp
     vector.hpp
-    matrix.hpp)
+    linear_algebra.cpp
+)
+set_target_properties(linear_algebra PROPERTIES CXX_STANDARD 23)
 
-set_target_properties(test PROPERTIES CXX_STANDARD 23)
-target_link_libraries(test measure_duration)
+add_executable(linear_algebra_test
+    main.cpp)
+
+set_target_properties(linear_algebra_test PROPERTIES CXX_STANDARD 23)
+target_link_libraries(linear_algebra_test measure_duration linear_algebra)
