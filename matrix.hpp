@@ -64,8 +64,18 @@ namespace linear_algebra {
 	public:
 		static constexpr size_t m = Rows;
 		static constexpr size_t n = Columns;
-		template<class... List>
-		matrix(List... list) : m_columns{ list... } {}
+		matrix()
+			: m_columns{} {}
+		matrix(std::initializer_list<std::initializer_list<T>> row_list)
+			: m_columns{ create_columns_from_rows(row_list) } {}
+		matrix(std::array<column_vector<T, Rows>, Columns> columns) : m_columns{ columns } {}
+		matrix(std::initializer_list<column_vector<T, Rows>> columns) : m_columns{} {
+			size_t i = 0;
+			for (auto col : columns) {
+				m_columns[i] = col;
+				i++;
+			}
+		}
 		vector<T, m>& column(size_t i) {
 			return m_columns[i];
 		}
@@ -103,6 +113,19 @@ namespace linear_algebra {
 				for (size_t row = 0; row < m; row++) {
 					columns[col][row] = get_element(row, col);
 				}
+			}
+			return columns;
+		}
+		static auto create_columns_from_rows(auto&& rows) {
+			std::array<column_vector<T, m>, n> columns{};
+			size_t row_index = 0;
+			for (auto row : rows) {
+				size_t col_index = 0;
+				for (auto ele : row) {
+					columns[col_index][row_index] = ele;
+					col_index++;
+				}
+				row_index++;
 			}
 			return columns;
 		}

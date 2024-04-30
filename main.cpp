@@ -11,16 +11,17 @@ void iterate_from_0_to(T end, auto&& f) {
 }
 
 auto& operator<<(std::ostream& out, linear_algebra::concept_helper::matrix auto&& m) {
-	out << std::endl;
+	out << "{" << std::endl;
 	iterate_from_0_to(m.size().get_row(),
 		[&out, &m](auto row) {
-			out << "|";
+			out << "{";
 			iterate_from_0_to(m.size().get_column(),
 			[&out, &m, &row](auto column) {
-					out << std::setw(8) << m[linear_algebra::matrix_index<decltype(row)>{}.set_row(row).set_column(column)] << " ";
+					out << std::setw(8) << m[linear_algebra::matrix_index<decltype(row)>{}.set_row(row).set_column(column)] << ",";
 				});
-			out << "|" << std::endl;
+			out << "}," << std::endl;
 		});
+	out << "}";
 	return out;
 }
 
@@ -81,6 +82,14 @@ public:
 					std::cout << "after eliminate, it =" << res << std::endl;
 					res = back_substitution(res);
 					std::cout << "after back substitution, it =" << res << std::endl;
+				}
+				{
+					auto A = linear_algebra::matrix<int, 3, 3>{
+						{1, 0, 1},
+						{2, 3, 0},
+						{5, 4, 7}
+					};
+					std::cout << "test initializer, A = " << A << std::endl;
 				}
 			}
 		};
