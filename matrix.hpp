@@ -31,18 +31,19 @@ namespace linear_algebra {
 	template<class T>
 	class matrix_index {
 	public:
-		auto set_row(T row) {
+		constexpr matrix_index() : m_row{}, m_column{} {}
+		constexpr auto set_row(T row) {
 			m_row = row;
 			return *this;
 		}
-		auto set_column(T column) {
+		constexpr auto set_column(T column) {
 			m_column = column;
 			return *this;
 		}
-		auto get_row() const {
+		constexpr auto get_row() const {
 			return m_row;
 		}
-		auto get_column() const {
+		constexpr auto get_column() const {
 			return m_column;
 		}
 	private:
@@ -103,7 +104,7 @@ namespace linear_algebra {
 		auto& operator[](concept_helper::matrix_index auto&& i) {
 			return m_columns[i.get_column()][i.get_row()];
 		}
-		auto size() const {
+		static constexpr auto size() {
 			return matrix_index<size_t>{}.set_column(Columns).set_row(Rows);
 		}
 	private:
@@ -140,6 +141,38 @@ namespace linear_algebra {
 		}
 		return res;
 	}
+	template<class T, size_t Rows>
+	auto identity_matrix() {
+		matrix<T, Rows, Rows> res{};
+		for (int i = 0; i < Rows; i++) {
+			res.column(i)[i] = 1;
+		}
+		return res;
+	}
+	auto concatenate_columns(concept_helper::matrix auto&& A, concept_helper::matrix auto&& B) {
+		using element_type = std::remove_cvref_t<decltype(A[make_matrix_pivot_index(0)])>;
+		matrix<element_type,
+			A.size().get_row(), A.size().get_column() + B.size().get_column()> res{};
+		static_assert(A.size().get_row() == B.size().get_row());
+		for (int i = 0; i < A.size().get_column(); i++) {
+			res.column(i) = A.column(i);
+		}
+		for (int i = A.size().get_column(); i < A.size().get_column() + B.size().get_column(); i++) {
+			res.column(i) = B.column(i-A.size().get_column());
+		}
+		return res;
+	}
+	template<int... Columns>
+	auto select_columns(concept_helper::matrix auto&& A) {
+		using element_type = std::remove_cvref_t<decltype(A[make_matrix_pivot_index(0)])>;
+		constexpr auto column_indices = std::array{ Columns... };
+		matrix<element_type,
+			A.size().get_row(), column_indices.size()> res{};
+		for (int i = 0; i < column_indices.size(); i++) {
+			res.column(i) = A.column(column_indices[i]);
+		}
+		return res;
+	}
 
 	template<class T, size_t m, size_t n, size_t p>
 	auto operator*(matrix<T, m, n> lhs, matrix<T, n, p> rhs) {
@@ -160,7 +193,11 @@ namespace linear_algebra {
 	auto eliminate(concept_helper::matrix auto&& A, concept_helper::matrix_index auto&& index) {
 		auto column = index.get_column();
 		auto row = index.get_row();
-		auto multier = A[index] / A[make_matrix_pivot_index(column)];
+		auto pivot = A[make_matrix_pivot_index(column)];
+		if (pivot == 0) {
+			throw std::runtime_error{ "matrix is not invertible" };
+		}
+		auto multier = A[index] / pivot;
 		auto EA = A;
 		EA.row_subtract(row, column, multier);
 		return EA;
@@ -188,7 +225,11 @@ namespace linear_algebra {
 					res.row_subtract(row, column, res[matrix_index<decltype(row)>{}.set_row(row).set_column(column)]);
 				}
 				else {
-					res.row_mul(row, 1.0/res[make_matrix_pivot_index(row)]);
+					auto pivot = res[make_matrix_pivot_index(row)];
+					if (pivot == 0) {
+						throw std::runtime_error{ "matrix is not invertible" };
+					}
+					res.row_mul(row, 1.0/pivot);
 				}
 				if (column == row) {
 					break;
