@@ -91,6 +91,30 @@ public:
 					};
 					std::cout << "test initializer, A = " << A << std::endl;
 				}
+				try{
+					using namespace linear_algebra;
+					std::cout << "This is chapter 2, exercise 31." << std::endl;
+					auto A = matrix<Number, 3, 3>{
+						{2, 1, 1},
+						{1, 2, 1},
+						{1, 1, 2}
+					};
+					std::cout << "A = " << A << std::endl;
+					auto A_I = concatenate_columns(A, identity_matrix<Number, 3>());
+					std::cout << "A inverse = " << select_columns<3, 4, 5>(back_substitution(eliminate(A_I))) << std::endl;
+					auto B = matrix<Number, 3, 3>{
+						{2, -1, -1},
+						{-1, 2, -1},
+						{-1, -1, 2}
+					};
+					std::cout << "B = " << B << std::endl;
+					auto B_I = concatenate_columns(B, identity_matrix<Number, 3>());
+					std::cout << "B inverse = " <<
+						select_columns<3, 4, 5>(back_substitution(eliminate(B_I))) << std::endl;
+				}
+				catch (std::exception& e) {
+					std::cout << e.what() << std::endl;
+				}
 			}
 		};
 	};
