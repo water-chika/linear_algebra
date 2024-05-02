@@ -1,6 +1,7 @@
 #pragma once
 #include "vector.hpp"
 #include <algorithm>
+#include <iomanip>
 
 namespace linear_algebra {
 	namespace concept_helper {
@@ -132,6 +133,26 @@ namespace linear_algebra {
 		}
 		std::array<column_vector<T, m>, n> m_columns;
 	};
+	template<class T>
+	void iterate_from_0_to(T end, auto&& f) {
+		for (T i = 0; i < end; i++) {
+			f(i);
+		}
+	}
+	auto& operator<<(std::ostream& out, linear_algebra::concept_helper::matrix auto&& m) {
+		out << "{" << std::endl;
+		iterate_from_0_to(m.size().get_row(),
+			[&out, &m](auto row) {
+				out << "{";
+				iterate_from_0_to(m.size().get_column(),
+					[&out, &m, &row](auto column) {
+						out << std::setw(8) << m[linear_algebra::matrix_index<decltype(row)>{}.set_row(row).set_column(column)] << ",";
+					});
+				out << "}," << std::endl;
+			});
+		out << "}";
+		return out;
+	}
 
 	template<class T, size_t Rows, size_t Columns>
 	auto make_matrix_with_columns(std::initializer_list<vector<T, Rows>> columns) {
@@ -229,7 +250,7 @@ namespace linear_algebra {
 					if (pivot == 0) {
 						throw std::runtime_error{ "matrix is not invertible" };
 					}
-					res.row_mul(row, 1.0/pivot);
+					res.row_mul(row, 1/pivot);
 				}
 				if (column == row) {
 					break;

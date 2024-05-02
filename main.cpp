@@ -2,29 +2,6 @@
 #include <iostream>
 #include <measure_duration.hpp>
 #include <concepts>
-
-template<class T>
-void iterate_from_0_to(T end, auto&& f) {
-	for (T i = 0; i < end; i++) {
-		f(i);
-	}
-}
-
-auto& operator<<(std::ostream& out, linear_algebra::concept_helper::matrix auto&& m) {
-	out << "{" << std::endl;
-	iterate_from_0_to(m.size().get_row(),
-		[&out, &m](auto row) {
-			out << "{";
-			iterate_from_0_to(m.size().get_column(),
-			[&out, &m, &row](auto column) {
-					out << std::setw(8) << m[linear_algebra::matrix_index<decltype(row)>{}.set_row(row).set_column(column)] << ",";
-				});
-			out << "}," << std::endl;
-		});
-	out << "}";
-	return out;
-}
-
 namespace water {
 	namespace concept_helper {
 		template<class T>

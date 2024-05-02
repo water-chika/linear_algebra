@@ -10,6 +10,7 @@ add_library(
     vector.hpp
     linear_algebra.cpp
 )
+target_include_directories(linear_algebra PUBLIC ${CMAKE_CURRENT_SOURCE_DIR})
 set_target_properties(linear_algebra PROPERTIES CXX_STANDARD 23)
 
 add_executable(linear_algebra_test
