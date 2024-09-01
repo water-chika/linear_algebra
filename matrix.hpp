@@ -262,4 +262,19 @@ namespace linear_algebra {
 		}
 		return res;
 	}
+
+	template<concept_helper::matrix Matrix>
+	Matrix gram_schmidt(Matrix&& A) {
+		Matrix res = A;
+		iterate_from_0_to(A.size().get_column(),
+			[&res](auto i) {
+				iterate_from_0_to(i,
+					[&res, i](auto j) {
+						auto base = res.column(j);
+						auto b = res.column(i);
+						res.column(i) -= dot_product(base, b)*base/(dot_product(base,base));
+					});
+			});
+		return res;
+	}
 }

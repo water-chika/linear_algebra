@@ -18,3 +18,8 @@ add_executable(linear_algebra_test
 
 set_target_properties(linear_algebra_test PROPERTIES CXX_STANDARD 23)
 target_link_libraries(linear_algebra_test measure_duration linear_algebra)
+
+add_executable(gram_schmidt
+    gram_schmidt.cpp)
+set_target_properties(gram_schmidt PROPERTIES CXX_STANDARD 23)
+target_link_libraries(gram_schmidt linear_algebra)

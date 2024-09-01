@@ -16,6 +16,12 @@ namespace linear_algebra {
 		T operator[](size_t i) const {
 			return m_data[i];
 		}
+		vector& operator-=(const vector& rhs) {
+			for (size_t i = 0; i < Size; i++) {
+				m_data[i] -= rhs[i];
+			}
+			return *this;
+		}
 	private:
 		std::array<T, Size> array_from_initializer_list(std::initializer_list<T> data) {
 			assert(data.size() == Size);
@@ -62,6 +68,14 @@ namespace linear_algebra {
 		vector<T, Size> res{};
 		for (size_t i = 0; i < Size; i++) {
 			res[i] = lhs[i] * rhs;
+		}
+		return res;
+	}
+	template<class T, size_t Size>
+	vector<T, Size> operator/(vector<T, Size> lhs, T rhs) {
+		vector<T, Size> res{};
+		for (size_t i = 0; i < Size; i++) {
+			res[i] = lhs[i] / rhs;
 		}
 		return res;
 	}
