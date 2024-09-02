@@ -101,6 +101,16 @@ namespace linear_algebra {
 		}
 		return res;
 	}
+	auto element_multi(const vector auto& lhs, const vector auto& rhs) {
+		if (lhs.size() != rhs.size()) {
+			throw std::runtime_error{ "size not equal" };
+		}
+		auto res{ lhs };
+		for (size_t i = 0; i < lhs.size(); i++) {
+			res[i] *= rhs[i];
+		}
+		return res;
+	}
 	template<class T, size_t Size>
 	fixsized_vector<T, Size> operator/(fixsized_vector<T, Size> lhs, T rhs) {
 		fixsized_vector<T, Size> res{};
