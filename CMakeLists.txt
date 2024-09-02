@@ -23,3 +23,8 @@ add_executable(gram_schmidt
     gram_schmidt.cpp)
 set_target_properties(gram_schmidt PROPERTIES CXX_STANDARD 23)
 target_link_libraries(gram_schmidt linear_algebra)
+
+add_executable(vector_test
+    vector_test.cpp)
+set_target_properties(vector_test PROPERTIES CXX_STANDARD 23)
+target_link_libraries(vector_test linear_algebra)

@@ -10,6 +10,10 @@ namespace linear_algebra {
 		t1.size();
 		t1[0];
 	};
+	template<class Vector, class ElementType>
+	concept vector_element_type = vector<Vector> && requires(Vector v) {
+		{ v[0] } -> std::convertible_to<ElementType>;
+	};
 	template<class T, size_t Size>
 	class fixsized_vector {
 	public:
@@ -45,6 +49,28 @@ namespace linear_algebra {
 		}
 		std::array<T, Size> m_data;
 	};
+	template<vector Vector, class T>
+		requires vector_element_type<Vector, T>
+	Vector operator*(const Vector& lhs, const T& rhs) {
+		Vector res{ lhs };
+		for (size_t i = 0; i < res.size(); i++) {
+			res[i] *= rhs;
+		}
+		return res;
+	}
+	template<vector Vector, class T>
+		requires vector_element_type<Vector, T>
+	Vector& operator*=(Vector& lhs, const T& rhs) {
+		lhs = lhs * rhs;
+		return lhs;
+	}
+	bool operator==(const vector auto& lhs, const vector auto& rhs) {
+		bool equal{ lhs.size() == rhs.size() };
+		for (size_t i = 0; equal && i < lhs.size(); i++) {
+			equal = equal && (lhs[i] == rhs[i]);
+		}
+		return equal;
+	}
 	vector auto operator+(const vector auto& lhs, const vector auto& rhs) {
 		if (lhs.size() != rhs.size()) {
 			throw std::runtime_error{ "size not equal" };
@@ -72,32 +98,6 @@ namespace linear_algebra {
 		auto res{ lhs[0]*rhs[0] };
 		for (size_t i = 1; i < lhs.size(); i++) {
 			res += lhs[i] * rhs[i];
-		}
-		return res;
-	}
-	vector auto operator*(const vector auto& lhs, const vector auto& rhs) {
-		if (lhs.size() != rhs.size()) {
-			throw std::runtime_error{ "size not equal" };
-		}
-		auto res{ lhs };
-		for (size_t i = 0; i < res.size(); i++) {
-			res[i] *= rhs[i];
-		}
-		return res;
-	}
-	template<class T, size_t Size>
-	fixsized_vector<T, Size> operator*(fixsized_vector<T, Size> lhs, T rhs) {
-		fixsized_vector<T, Size> res{};
-		for (size_t i = 0; i < Size; i++) {
-			res[i] = lhs[i] * rhs;
-		}
-		return res;
-	}
-	template<class T, size_t Size>
-	fixsized_vector<T, Size> operator*(T lhs, fixsized_vector<T, Size> rhs) {
-		fixsized_vector<T, Size> res{};
-		for (size_t i = 0; i < Size; i++) {
-			res[i] = lhs * rhs[i];
 		}
 		return res;
 	}
