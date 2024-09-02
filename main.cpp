@@ -18,7 +18,7 @@ public:
 		class set_index {
 		public:
 			static void run() {
-				linear_algebra::vector<Number, 2> v{ 4.0f, 1.0f }, u{ 2.0f, -1.0f };
+				linear_algebra::fixsized_vector<Number, 2> v{ 4.0f, 1.0f }, u{ 2.0f, -1.0f };
 				auto combination = Number{ 2.0 } *v + Number{ -3.0f }*u;
 				std::cout << combination << std::endl;
 				std::cout << dot_product(Number{ 0.5f } *v * Number{ 2.0f }, Number{ 2.0f } *u * Number{ 0.5f }) << std::endl;
@@ -52,8 +52,8 @@ public:
 
 				{
 					using namespace linear_algebra;
-					auto A_I = make_matrix_with_columns<double, 3, 6>({vector<double, 3>{2,1,1}, vector<double, 3>{1,2,1}, vector<double, 3>{1,1,2},
-						vector<double, 3>{1,0,0}, vector<double, 3>{0,1,0}, vector<double, 3>{0,0,1}});
+					auto A_I = make_matrix_with_columns<double, 3, 6>({fixsized_vector<double, 3>{2,1,1}, fixsized_vector<double, 3>{1,2,1}, fixsized_vector<double, 3>{1,1,2},
+						fixsized_vector<double, 3>{1,0,0}, fixsized_vector<double, 3>{0,1,0}, fixsized_vector<double, 3>{0,0,1}});
 					std::cout << "set A_I = " << A_I << std::endl;
 					auto res = eliminate(A_I);
 					std::cout << "after eliminate, it =" << res << std::endl;

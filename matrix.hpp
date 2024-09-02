@@ -56,10 +56,10 @@ namespace linear_algebra {
 		return matrix_index<T>{}.set_row(i).set_column(i);
 	}
 	template<class T, size_t size>
-	class column_vector : public vector<T, size> {
+	class column_vector : public fixsized_vector<T, size> {
 	public:
-		column_vector() : vector<T, size>{} {}
-		column_vector(vector<T, size> v) : vector<T, size>{ v } {}
+		column_vector() : fixsized_vector<T, size>{} {}
+		column_vector(fixsized_vector<T, size> v) : fixsized_vector<T, size>{ v } {}
 	};
 	template<class T, size_t Rows, size_t Columns>
 	class matrix {
@@ -78,12 +78,12 @@ namespace linear_algebra {
 				i++;
 			}
 		}
-		vector<T, m>& column(size_t i) {
+		fixsized_vector<T, m>& column(size_t i) {
 			return m_columns[i];
 		}
-		vector<T, n> row(size_t i) const {
+		fixsized_vector<T, n> row(size_t i) const {
 			assert(i < n);
-			vector<T, n> res{};
+			fixsized_vector<T, n> res{};
 			for (size_t j = 0; j < n; j++) {
 				res[j] = m_columns[j][i];
 			}
@@ -155,7 +155,7 @@ namespace linear_algebra {
 	}
 
 	template<class T, size_t Rows, size_t Columns>
-	auto make_matrix_with_columns(std::initializer_list<vector<T, Rows>> columns) {
+	auto make_matrix_with_columns(std::initializer_list<fixsized_vector<T, Rows>> columns) {
 		matrix<T, Rows, Columns> res{};
 		for (int i = 0; i < columns.size(); i++) {
 			res.column(i) = *(columns.begin() + i);

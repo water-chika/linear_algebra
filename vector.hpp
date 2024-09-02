@@ -5,18 +5,32 @@
 #include <cassert>
 
 namespace linear_algebra {
+	template<class T>
+	concept vector = requires (T t1, T t2) {
+		t1.size();
+		t1[0];
+		t1 + t2;
+		t1 - t2;
+		t1 += t2;
+		t1 -= t2;
+		t1* t1[0];
+		t1[0] * t1;
+		t1 / t1[0];
+		t1 *= t1[0];
+		t1 /= t1[0];
+	};
 	template<class T, size_t Size>
-	class vector {
+	class fixsized_vector {
 	public:
-		vector() : m_data{} {}
-		vector(std::initializer_list<T> data) : m_data{array_from_initializer_list(data)} {}
+		fixsized_vector() : m_data{} {}
+		fixsized_vector(std::initializer_list<T> data) : m_data{array_from_initializer_list(data)} {}
 		T& operator[](size_t i) {
 			return m_data[i];
 		}
 		T operator[](size_t i) const {
 			return m_data[i];
 		}
-		vector& operator-=(const vector& rhs) {
+		fixsized_vector& operator-=(const fixsized_vector& rhs) {
 			for (size_t i = 0; i < Size; i++) {
 				m_data[i] -= rhs[i];
 			}
@@ -31,56 +45,52 @@ namespace linear_algebra {
 		}
 		std::array<T, Size> m_data;
 	};
-	template<class T, size_t Size>
-	vector<T, Size> operator+(vector<T, Size> lhs, vector<T, Size> rhs) {
-		vector<T, Size> res{};
+	vector auto operator+(const vector auto& lhs, const vector auto& rhs) {
+		auto res{lhs};
 		for (size_t i = 0; i < Size; i++) {
-			res[i] = lhs[i] + rhs[i];
+			res[i] += rhs[i];
+		}
+		return res;
+	}
+	vector auto operator-(const vector auto& lhs, const vector auto& rhs) {
+		auto res{ lhs };
+		for (size_t i = 0; i < Size; i++) {
+			res[i] -= rhs[i];
+		}
+		return res;
+	}
+	vector auto dot_product(const vector auto& lhs, const vector auto& rhs) {
+		auto res{ lhs };
+		for (size_t i = 0; i < Size; i++) {
+			res[i] *= rhs[i];
+		}
+		return res;
+	}
+	vector auto operator*(const vector auto& lhs, const vector auto& rhs) {
+		auto res{ lhs };
+		for (size_t i = 0; i < Size; i++) {
+			res[i] *= rhs[i];
 		}
 		return res;
 	}
 	template<class T, size_t Size>
-	vector<T, Size> operator-(vector<T, Size> lhs, vector<T, Size> rhs) {
-		vector<T, Size> res{};
-		for (size_t i = 0; i < Size; i++) {
-			res[i] = lhs[i] - rhs[i];
-		}
-		return res;
-	}
-	template<class T, size_t Size>
-	T dot_product(vector<T, Size> lhs, vector<T, Size> rhs) {
-		T res{};
-		for (size_t i = 0; i < Size; i++) {
-			res += lhs[i] * rhs[i];
-		}
-		return res;
-	}
-	template<class T, size_t Size>
-	vector<T, Size> operator*(T lhs, vector<T, Size> rhs) {
-		vector<T, Size> res{};
-		for (size_t i = 0; i < Size; i++) {
-			res[i] = lhs * rhs[i];
-		}
-		return res;
-	}
-	template<class T, size_t Size>
-	vector<T, Size> operator*(vector<T, Size> lhs, T rhs) {
-		vector<T, Size> res{};
+	fixsized_vector<T, Size> operator*(fixsized_vector<T, Size> lhs, T rhs) {
+		fixsized_vector<T, Size> res{};
 		for (size_t i = 0; i < Size; i++) {
 			res[i] = lhs[i] * rhs;
 		}
 		return res;
 	}
 	template<class T, size_t Size>
-	vector<T, Size> operator/(vector<T, Size> lhs, T rhs) {
-		vector<T, Size> res{};
+	fixsized_vector<T, Size> operator/(fixsized_vector<T, Size> lhs, T rhs) {
+		fixsized_vector<T, Size> res{};
 		for (size_t i = 0; i < Size; i++) {
 			res[i] = lhs[i] / rhs;
 		}
 		return res;
 	}
 	template<class T, size_t Size>
-	std::ostream& operator<<(std::ostream& out, vector<T, Size> v) {
+	std::ostream& operator<<(std::ostream& out, fixsized_vector<T, Size> v) {
 		out << "[";
 		for (size_t i = 0; i+1 < Size; i++) {
 			out << v[i] << ", ";
