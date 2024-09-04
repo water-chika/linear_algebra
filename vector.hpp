@@ -4,9 +4,15 @@
 #include <iostream>
 #include <cassert>
 
+#include <fixsized_vector.hpp>
+
 namespace linear_algebra {
 	template<class T>
-	concept vector = requires (T t1, T t2) {
+	constexpr bool is_vector_type = false;
+	template<class T, size_t Size>
+	constexpr bool is_vector_type<fixsized_vector<T, Size>> = true;
+	template<class T>
+	concept vector = is_vector_type<T> && requires (T t1, T t2) {
 		t1.size();
 		t1[0];
 	};
@@ -14,41 +20,7 @@ namespace linear_algebra {
 	concept vector_element_type = vector<Vector> && requires(Vector v) {
 		{ v[0] } -> std::convertible_to<ElementType>;
 	};
-	template<class T, size_t Size>
-	class fixsized_vector {
-	public:
-		fixsized_vector() : m_data{} {}
-		fixsized_vector(std::initializer_list<T> data) : m_data{array_from_initializer_list(data)} {}
-		size_t size() const {
-			return Size;
-		}
-		T& operator[](size_t i) {
-			return m_data[i];
-		}
-		T operator[](size_t i) const {
-			return m_data[i];
-		}
-		fixsized_vector& operator-=(const fixsized_vector& rhs) {
-			for (size_t i = 0; i < Size; i++) {
-				m_data[i] -= rhs[i];
-			}
-			return *this;
-		}
-		fixsized_vector& operator+=(const fixsized_vector& rhs) {
-			for (size_t i = 0; i < Size; i++) {
-				m_data[i] += rhs[i];
-			}
-			return *this;
-		}
-	private:
-		std::array<T, Size> array_from_initializer_list(std::initializer_list<T> data) {
-			assert(data.size() == Size);
-			std::array<T, Size> res{};
-			std::ranges::copy(data, res.begin());
-			return res;
-		}
-		std::array<T, Size> m_data;
-	};
+
 	template<vector Vector, class T>
 		requires vector_element_type<Vector, T>
 	Vector operator*(const Vector& lhs, const T& rhs) {
@@ -111,21 +83,22 @@ namespace linear_algebra {
 		}
 		return res;
 	}
-	template<class T, size_t Size>
-	fixsized_vector<T, Size> operator/(fixsized_vector<T, Size> lhs, T rhs) {
-		fixsized_vector<T, Size> res{};
-		for (size_t i = 0; i < Size; i++) {
-			res[i] = lhs[i] / rhs;
+	template<vector Vector, class T>
+		requires vector_element_type<Vector, T>
+	Vector operator/(const Vector& lhs, const T& rhs) {
+		Vector res{ lhs };
+		for (size_t i = 0; i < res.size(); i++) {
+			res[i] /= rhs;
 		}
 		return res;
 	}
-	template<class T, size_t Size>
-	std::ostream& operator<<(std::ostream& out, fixsized_vector<T, Size> v) {
+	std::ostream& operator<<(std::ostream& out, const vector auto& v) {
 		out << "[";
-		for (size_t i = 0; i+1 < Size; i++) {
+		auto size = v.size();
+		for (size_t i = 0; i+1 < size; i++) {
 			out << v[i] << ", ";
 		}
-		out << v[Size - 1];
+		out << v[size - 1];
 		out << "]";
 		return out;
 	}
