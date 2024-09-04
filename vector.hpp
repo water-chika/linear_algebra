@@ -12,7 +12,7 @@ namespace linear_algebra {
 	template<class T, size_t Size>
 	constexpr bool is_vector_type<fixsized_vector<T, Size>> = true;
 	template<class T>
-	concept vector = is_vector_type<T> && requires (T t1, T t2) {
+	concept vector = is_vector_type<std::remove_cvref_t<T>> && requires (T t1, T t2) {
 		t1.size();
 		t1[0];
 	};
@@ -21,12 +21,40 @@ namespace linear_algebra {
 		{ v[0] } -> std::convertible_to<ElementType>;
 	};
 
+    // Support ranged for loop.
+    template<vector Vector>
+    struct vector_iterator {
+        Vector& v;
+        size_t index;
+        vector_iterator& operator++() {
+            ++index;
+            return *this;
+        }
+        vector_iterator operator++(int) {
+            auto res = *this;
+            index++;
+            return res;
+        }
+        auto& operator*() {
+            return v[index];
+        }
+        bool operator==(const vector_iterator& lhs) const {
+            return (&v) == (&lhs.v) && index == lhs.index;
+        }
+    };
+    auto begin(vector auto&& v) {
+        return vector_iterator{v, 0};
+    }
+    auto end(vector auto&& v) {
+        return vector_iterator{v, v.size()};
+    }
+
 	template<vector Vector, class T>
 		requires vector_element_type<Vector, T>
 	Vector operator*(const Vector& lhs, const T& rhs) {
 		Vector res{ lhs };
-		for (size_t i = 0; i < res.size(); i++) {
-			res[i] *= rhs;
+		for (auto& e : res) {
+			e *= rhs;
 		}
 		return res;
 	}
@@ -42,11 +70,11 @@ namespace linear_algebra {
 		return lhs;
 	}
 	bool operator==(const vector auto& lhs, const vector auto& rhs) {
-		bool equal{ lhs.size() == rhs.size() };
-		for (size_t i = 0; equal && i < lhs.size(); i++) {
-			equal = equal && (lhs[i] == rhs[i]);
-		}
-		return equal;
+        bool equal{lhs.size() == rhs.size()};
+        for (size_t i = 0; equal && i < lhs.size(); i++) {
+            equal = lhs[i] == rhs[i];
+        }
+        return equal;
 	}
 	vector auto operator+(const vector auto& lhs, const vector auto& rhs) {
 		if (lhs.size() != rhs.size()) {
