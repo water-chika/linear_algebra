@@ -32,6 +32,11 @@ namespace linear_algebra {
 	}
 	template<vector Vector, class T>
 		requires vector_element_type<Vector, T>
+	Vector operator*(const T& lhs, const Vector& rhs) {
+		return rhs * lhs;
+	}
+	template<vector Vector, class T>
+		requires vector_element_type<Vector, T>
 	Vector& operator*=(Vector& lhs, const T& rhs) {
 		lhs = lhs * rhs;
 		return lhs;
