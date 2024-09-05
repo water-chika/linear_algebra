@@ -28,6 +28,17 @@ bool test_element_multi() {
     linear_algebra::fixsized_vector<double, 2> b{ -1.0, 1.5 };
     return element_multi(a, b) == linear_algebra::fixsized_vector<double, 2>{-0.5, -0.5*1.5};
 }
+bool test_ranged_for() {
+    linear_algebra::fixsized_vector<double, 128> a{};
+    for (auto& e : a) {
+        e = 1.0;
+    }
+    bool success = true;
+    for (auto e : a) {
+        success = success && e == 1.0;
+    }
+    return success;
+}
 
 int main() {
     std::vector<std::function<bool()>> tests{
@@ -35,7 +46,8 @@ int main() {
         test1,
         test_add,
         test_sub,
-        test_element_multi
+        test_element_multi,
+        test_ranged_for,
     };
     for (auto& test : tests) {
         if (test()) {
