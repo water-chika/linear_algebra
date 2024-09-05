@@ -96,6 +96,13 @@ namespace linear_algebra {
         }
         return res;
     }
+    vector auto operator-(const vector auto& lhs) {
+        auto res{ lhs };
+        for (size_t i = 0; i < res.size(); i++) {
+            res[i] = -lhs[i];
+        }
+        return res;
+    }
     auto dot_product(const vector auto& lhs, const vector auto& rhs) {
         if (lhs.size() != rhs.size()) {
             throw std::runtime_error{ "size not equal" };

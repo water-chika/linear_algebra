@@ -39,6 +39,10 @@ bool test_ranged_for() {
     }
     return success;
 }
+bool test_negative() {
+    linear_algebra::fixsized_vector<double, 2> a{1.0, -1.0};
+    return -a == linear_algebra::fixsized_vector<double, 2>{-1.0, 1.0};
+}
 
 int main() {
     std::vector<std::function<bool()>> tests{
@@ -48,6 +52,7 @@ int main() {
         test_sub,
         test_element_multi,
         test_ranged_for,
+        test_negative,
     };
     for (auto& test : tests) {
         if (test()) {
