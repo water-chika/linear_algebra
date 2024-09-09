@@ -162,6 +162,21 @@ namespace linear_algebra {
             for (auto q : orthonormal_vectors) {
                 v -= q * dot_product(v, q);
             }
+            Vector zero{};
+            if (v != zero) {
+                auto q = normalize(v);
+                orthonormal_vectors.emplace_back(q);
+            }
+        }
+        return orthonormal_vectors;
+    }
+    template<vector Vector>
+    auto gram_schmidt(std::vector<Vector> vectors) {
+        std::vector<Vector> orthonormal_vectors{};
+        for (auto v : vectors) {
+            for (auto q : orthonormal_vectors) {
+                v -= q * dot_product(v, q);
+            }
             auto q = normalize(v);
             orthonormal_vectors.emplace_back(q);
         }

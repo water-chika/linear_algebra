@@ -264,6 +264,17 @@ namespace linear_algebra {
     }
 
     template<concept_helper::matrix Matrix>
+    auto get_columns(Matrix&& A) {
+        auto size = A.size().get_column();
+        std::vector<std::remove_cvref_t<decltype(A[0])>> columns(size);
+        iterate_from_0_to(size,
+            [&columns, &A](auto i) {
+                columns[i] = A.column(i);
+            });
+        return columns;
+    }
+
+    template<concept_helper::matrix Matrix>
     Matrix gram_schmidt(Matrix&& A) {
         Matrix res = A;
         iterate_from_0_to(A.size().get_column(),
