@@ -12,7 +12,7 @@ namespace linear_algebra {
         T& operator[](size_t i) {
             return m_data[i];
         }
-        T operator[](size_t i) const {
+        const T& operator[](size_t i) const {
             return m_data[i];
         }
         fixsized_vector& operator-=(const fixsized_vector& rhs) {

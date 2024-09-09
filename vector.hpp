@@ -42,10 +42,10 @@ namespace linear_algebra {
             return (&v) == (&lhs.v) && index == lhs.index;
         }
     };
-    auto begin(vector auto&& v) {
+    auto begin(vector auto& v) {
         return vector_iterator{v, 0};
     }
-    auto end(vector auto&& v) {
+    auto end(vector auto& v) {
         return vector_iterator{v, v.size()};
     }
 
@@ -141,5 +141,30 @@ namespace linear_algebra {
         out << v[size - 1];
         out << "]";
         return out;
+    }
+    using std::sqrt;
+    template<vector Vector>
+    auto length(const Vector& v) {
+        std::remove_cvref_t<decltype(v[0])> len{0};
+        for (auto e : v) {
+            len += e*e;
+        }
+        return sqrt(len);
+    }
+    template<vector Vector>
+    auto normalize(Vector v) {
+        return v / length(v);
+    }
+    template<vector Vector>
+    auto construct_orthonormal_vectors(std::vector<Vector> vectors) {
+        std::vector<Vector> orthonormal_vectors{};
+        for (auto v : vectors) {
+            for (auto q : orthonormal_vectors) {
+                v -= q * dot_product(v, q);
+            }
+            auto q = normalize(v);
+            orthonormal_vectors.emplace_back(q);
+        }
+        return orthonormal_vectors;
     }
 }

@@ -8,6 +8,7 @@ add_library(
     linear_algebra
     matrix.hpp
     vector.hpp
+    vector_space.hpp
     fixsized_vector.hpp
     linear_algebra.cpp
 )
