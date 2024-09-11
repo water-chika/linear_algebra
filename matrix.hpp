@@ -82,7 +82,7 @@ namespace linear_algebra {
             return m_columns[i];
         }
         fixsized_vector<T, n> row(size_t i) const {
-            assert(i < n);
+            assert(i < Rows);
             fixsized_vector<T, n> res{};
             for (size_t j = 0; j < n; j++) {
                 res[j] = m_columns[j][i];
@@ -287,5 +287,26 @@ namespace linear_algebra {
                     });
             });
         return res;
+    }
+    
+    template<typename T, size_t ROW, size_t COLUMN>
+    auto qr(const matrix<T, ROW, COLUMN> A) {
+        matrix<T, ROW, COLUMN> Q{ A };
+        matrix<T, COLUMN, COLUMN> R{};
+        iterate_from_0_to(A.size().get_column(),
+            [&Q, &R](auto i) {
+                iterate_from_0_to(i,
+                    [&Q, &R, i](auto j) {
+                        auto q = Q.column(j);
+                        auto b = Q.column(i);
+                        auto q_b = dot_product(q, b);
+                        R[R.size().set_row(j).set_column(i)] = q_b;
+                        Q.column(i) -= q * q_b;
+                    });
+                auto l = length(Q.column(i));
+                R[R.size().set_row(i).set_column(i)] = l;
+                Q.column(i) = Q.column(i) / l;
+            });
+        return std::pair{ Q, R };
     }
 }
