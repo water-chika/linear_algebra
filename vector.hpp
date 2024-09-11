@@ -3,6 +3,7 @@
 #include <array>
 #include <iostream>
 #include <cassert>
+#include <cmath>
 
 #include <fixsized_vector.hpp>
 
