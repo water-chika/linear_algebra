@@ -1,5 +1,6 @@
 #pragma once
 #include "vector.hpp"
+#include "fixsized_vector.hpp"
 #include <algorithm>
 #include <iomanip>
 
@@ -78,10 +79,21 @@ namespace linear_algebra {
                 i++;
             }
         }
+        const fixsized_vector<T, m>& column(size_t i) const {
+            return m_columns[i];
+        }
         fixsized_vector<T, m>& column(size_t i) {
             return m_columns[i];
         }
-        fixsized_vector<T, n> row(size_t i) const {
+        fixsized_pointer_vector<T, n> row(size_t i) {
+            assert(i < Rows);
+            fixsized_pointer_vector<T, n> res{};
+            for (size_t j = 0; j < n; j++) {
+                res.set(j, &m_columns[j][i]);
+            }
+            return res;
+        }
+        const fixsized_vector<T, n> row(size_t i) const {
             assert(i < Rows);
             fixsized_vector<T, n> res{};
             for (size_t j = 0; j < n; j++) {
@@ -103,6 +115,9 @@ namespace linear_algebra {
             return matrix{ create_columns_by_get_element(get_element) };
         }
         auto& operator[](concept_helper::matrix_index auto&& i) {
+            return m_columns[i.get_column()][i.get_row()];
+        }
+        const auto& operator[](concept_helper::matrix_index auto&& i) const {
             return m_columns[i.get_column()][i.get_row()];
         }
         static constexpr auto size() {
@@ -308,5 +323,41 @@ namespace linear_algebra {
                 Q.column(i) = Q.column(i) / l;
             });
         return std::pair{ Q, R };
+    }
+
+    template<typename T, size_t ROW, size_t COLUMN>
+    auto remove_row(const matrix<T, ROW, COLUMN> A, size_t row) {
+        matrix<T, ROW - 1, COLUMN> Q;
+        iterate_from_0_to(Q.size().get_row(),
+            [&Q, &A, row](auto i) {
+                Q.row(i) = A.row(i >= row ? i + 1 : i);
+            });
+        return Q;
+    }
+
+    template<typename T, size_t ROW, size_t COLUMN>
+    auto remove_column(const matrix<T, ROW, COLUMN> A, size_t column) {
+        matrix<T, ROW, COLUMN - 1> Q;
+        iterate_from_0_to(Q.size().get_column(),
+            [&Q, &A, column](auto i) {
+                Q.column(i) = A.column(i >= column ? i + 1 : i);
+            });
+        return Q;
+    }
+
+    template<typename T, size_t ROW, size_t COLUMN>
+    auto determinant(const matrix<T, ROW, COLUMN> A) {
+        std::remove_cvref_t<decltype(A[A.size()])> res{};
+        iterate_from_0_to(A.size().get_row(),
+            [&res, &A](auto i) {
+                auto E = remove_column(remove_row(A, 0), i);
+                auto C = (i % 2 == 0 ? 1 : -1) * determinant(E);
+                res += A.row(0)[i] * C;
+            });
+        return res;
+    }
+    template<>
+    auto determinant<double, 1, 1>(const matrix<double, 1, 1> A) {
+        return A[A.size().set_column(0).set_row(0)];
     }
 }

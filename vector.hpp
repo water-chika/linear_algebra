@@ -5,13 +5,10 @@
 #include <cassert>
 #include <cmath>
 
-#include <fixsized_vector.hpp>
-
 namespace linear_algebra {
     template<class T>
     constexpr bool is_vector_type = false;
-    template<class T, size_t Size>
-    constexpr bool is_vector_type<fixsized_vector<T, Size>> = true;
+
     template<class T>
     concept vector = is_vector_type<std::remove_cvref_t<T>> && requires (T t1, T t2) {
         t1.size();
@@ -49,7 +46,6 @@ namespace linear_algebra {
     auto end(vector auto& v) {
         return vector_iterator{v, v.size()};
     }
-
     template<vector Vector, class T>
         requires vector_element_type<Vector, T>
     Vector operator*(const Vector& lhs, const T& rhs) {
