@@ -1,4 +1,5 @@
 #include <vector.hpp>
+#include <fixsized_vector.hpp>
 #include <vector>
 #include <functional>
 
