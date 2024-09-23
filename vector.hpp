@@ -8,6 +8,10 @@
 namespace linear_algebra {
     template<class T>
     constexpr bool is_vector_type = false;
+    template<class T>
+    constexpr bool is_vector_reference_type = false;
+    template<class T>
+    using referenced_type = T::referenced_type;
 
     template<class T>
     concept vector = is_vector_type<std::remove_cvref_t<T>> && requires (T t1, T t2) {
@@ -18,9 +22,15 @@ namespace linear_algebra {
     concept vector_element_type = vector<Vector> && requires(Vector v) {
         { v[0] } -> std::convertible_to<ElementType>;
     };
+    template<class T>
+    concept vector_reference = is_vector_reference_type<std::remove_cvref_t<T>> && vector<referenced_type<T>>;
+    template<class Vector, class VectorReference>
+    concept vector_reference_type = vector<Vector> && vector_reference<VectorReference> && std::same_as<Vector, referenced_type<Vector>>;
+    template<class T>
+    concept vector_or_vector_reference = vector<T> || vector_reference<T>;
 
     // Support ranged for loop.
-    template<vector Vector>
+    template<vector_or_vector_reference Vector>
     struct vector_iterator {
         Vector& v;
         size_t index;
@@ -40,19 +50,40 @@ namespace linear_algebra {
             return (&v) == (&lhs.v) && index == lhs.index;
         }
     };
-    auto begin(vector auto& v) {
+    auto begin(vector_or_vector_reference auto& v) {
         return vector_iterator{v, 0};
     }
-    auto end(vector auto& v) {
+    auto end(vector_or_vector_reference auto& v) {
         return vector_iterator{v, v.size()};
+    }
+    template<vector Vector>
+    void foreach_index(Vector v, auto f) {
+        std::remove_cvref_t<decltype(v.size())> i = 0;
+        while (i < v.size()) {
+            f(i);
+            ++i;
+        }
     }
     template<vector Vector, class T>
         requires vector_element_type<Vector, T>
     Vector operator*(const Vector& lhs, const T& rhs) {
-        Vector res{ lhs };
+        auto res{ lhs };
         for (auto& e : res) {
             e *= rhs;
         }
+        assert(res[0] == lhs[0] * rhs);
+        return res;
+    }
+    template<vector_reference VectorRef, class T>
+        requires vector_element_type<referenced_type<VectorRef>, T>
+    auto operator*(const VectorRef& lhs, const T& rhs) {
+        referenced_type<VectorRef> res{};
+        foreach_index(res,
+            [&res, &lhs, &rhs](auto i) {
+                res[i] = lhs[i] * rhs;
+            }
+        );
+        assert(res[0] == lhs[0] * rhs);
         return res;
     }
     template<vector Vector, class T>
@@ -60,9 +91,7 @@ namespace linear_algebra {
     Vector operator*(const T& lhs, const Vector& rhs) {
         return rhs * lhs;
     }
-    template<vector Vector, class T>
-        requires vector_element_type<Vector, T>
-    Vector&& operator*=(Vector&& lhs, const T& rhs) {
+    auto&& operator*=(vector_or_vector_reference auto&& lhs, const auto& rhs) {
         for (auto& e : lhs) {
             e *= rhs;
         }
@@ -102,7 +131,7 @@ namespace linear_algebra {
         }
         return res;
     }
-    vector auto&& operator-=(vector auto&& lhs, const vector auto& rhs) {
+    vector_or_vector_reference auto&& operator-=(vector_or_vector_reference auto&& lhs, const vector_or_vector_reference auto& rhs) {
         if (lhs.size() != rhs.size()) {
             throw std::runtime_error{ "size not equal" };
         }
@@ -111,7 +140,7 @@ namespace linear_algebra {
         }
         return lhs;
     }
-    auto dot_product(const vector auto& lhs, const vector auto& rhs) {
+    auto dot_product(const vector_or_vector_reference auto& lhs, const vector_or_vector_reference auto& rhs) {
         if (lhs.size() != rhs.size()) {
             throw std::runtime_error{ "size not equal" };
         }
@@ -140,7 +169,7 @@ namespace linear_algebra {
         }
         return res;
     }
-    std::ostream& operator<<(std::ostream& out, const vector auto& v) {
+    std::ostream& operator<<(std::ostream& out, const vector_or_vector_reference auto& v) {
         out << "[";
         auto size = v.size();
         for (size_t i = 0; i+1 < size; i++) {
