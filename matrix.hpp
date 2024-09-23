@@ -241,7 +241,7 @@ namespace linear_algebra {
         }
     }
 
-    auto& eliminate(concept_helper::matrix auto& A, concept_helper::matrix_index auto&& index) {
+    auto& do_eliminate(concept_helper::matrix auto& A, concept_helper::matrix_index auto&& index) {
         auto column = index.get_column();
         auto row = index.get_row();
         auto pivot = A[make_matrix_pivot_index(column)];
@@ -266,12 +266,12 @@ namespace linear_algebra {
     }
 
     template<concept_helper::matrix Matrix>
-    auto& eliminate(Matrix& A) {
+    auto& do_eliminate(Matrix& A) {
         for_index_range(0, A.size().get_column(),
             [&A](auto column) {
                 for_index_range(column+1, A.size().get_row(),
                 [&A, column](auto row) {
-                        eliminate(A, make_matrix_pivot_index(column).set_row(row));
+                        do_eliminate(A, make_matrix_pivot_index(column).set_row(row));
                     });
             });
         return A;
@@ -290,7 +290,7 @@ namespace linear_algebra {
     }
     
     template<concept_helper::matrix Matrix>
-    Matrix back_substitution(Matrix&& A) {
+    Matrix back_substitution(const Matrix& A) {
         Matrix res = A;
         for (auto row = res.size().get_row() - 1; true; row--) {
             for (auto column = res.size().get_row() - 1; true; column--) {
@@ -314,6 +314,31 @@ namespace linear_algebra {
             }
         }
         return res;
+    }
+    template<concept_helper::matrix Matrix>
+    Matrix& do_back_substitution(Matrix& A) {
+        for (auto row = A.size().get_row() - 1; true; row--) {
+            for (auto column = A.size().get_row() - 1; true; column--) {
+                if (column != row) {
+                    A.row(row) -= A.row(column) *
+                        A[matrix_index<decltype(row)>{}.set_row(row).set_column(column)];
+                }
+                else {
+                    auto pivot = A[make_matrix_pivot_index(row)];
+                    if (pivot == 0) {
+                        throw std::runtime_error{ "matrix is not invertible" };
+                    }
+                    A.row(row) *= 1/pivot;
+                }
+                if (column == row) {
+                    break;
+                }
+            }
+            if (row == 0) {
+                break;
+            }
+        }
+        return A;
     }
 
     template<concept_helper::matrix Matrix>
@@ -409,4 +434,5 @@ namespace linear_algebra {
             });
         return res;
     }
+
 }

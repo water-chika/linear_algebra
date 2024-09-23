@@ -78,10 +78,7 @@ public:
                         {1, 1, 2}
                     };
                     std::cout << "A = " << A << std::endl;
-                    auto A_i = identity_matrix<Number, 3>();
-                    auto A_I = combined_reference_matrix{A, A_i};
-                    back_substitution(eliminate(A_I));
-                    std::cout << "A inverse = " << A_i << std::endl;
+                    std::cout << "A inverse = " << inverse(A) << std::endl;
                     auto B = matrix<Number, 3, 3>{
                         {2, -1, -1},
                         {-1, 2, -1},

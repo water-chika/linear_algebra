@@ -32,6 +32,15 @@ namespace linear_algebra{
             assert(left_half.size().get_row()
                     == right_half.size().get_row());
         }
+        operator matrix<T, ROW, COLUMN1+COLUMN2>() {
+            matrix<T, ROW, COLUMN1+COLUMN2> res{};
+            foreach(res,
+                    [&res, this](auto i) {
+                        res[i] = i.size().get_column() < COLUMN1 ? left_half[i] : right_half[i-COLUMN1];
+                    }
+                   );
+            return res;
+        }
         auto size() {
             auto l_size = left_half.size();
             auto r_size = right_half.size();
@@ -66,4 +75,12 @@ namespace linear_algebra{
         M1& left_half;
         M2& right_half;
     };
+    template<typename T, size_t ROW>
+    auto inverse(matrix<T, ROW, ROW> A) {
+        auto res = identity_matrix<T, ROW>();
+        auto A_I = combined_reference_matrix{A, res};
+        do_back_substitution(do_eliminate(A_I));
+        return res;
+    }
 }
+
