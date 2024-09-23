@@ -67,6 +67,7 @@ namespace linear_algebra {
     public:
         static constexpr size_t m = Rows;
         static constexpr size_t n = Columns;
+        using index_type = matrix_index<size_t>;
         matrix()
             : m_columns{} {}
         matrix(std::initializer_list<std::initializer_list<T>> row_list)
@@ -148,11 +149,25 @@ namespace linear_algebra {
         }
         std::array<column_vector<T, m>, n> m_columns;
     };
+
     template<class T>
     void iterate_from_0_to(T end, auto&& f) {
         for (T i = 0; i < end; i++) {
             f(i);
         }
+    }
+    template<concept_helper::matrix Matrix, class F>
+        requires std::invocable<F, typename Matrix::index_type>
+    void foreach(Matrix A, F fn) {
+        iterate_from_0_to(A.size().get_row(),
+            [&A, &fn](auto i) {
+                iterate_from_0_to(A.size().get_column(),
+                    [&A, &fn, i](auto j) {
+                        using index_t = typename Matrix::index_type;
+                        fn(index_t{}.set_row(i).set_column(j));
+                    });
+            }
+        );
     }
     auto& operator<<(std::ostream& out, linear_algebra::concept_helper::matrix auto&& m) {
         out << "{" << std::endl;
@@ -359,5 +374,16 @@ namespace linear_algebra {
     template<>
     auto determinant<double, 1, 1>(const matrix<double, 1, 1> A) {
         return A[A.size().set_column(0).set_row(0)];
+    }
+
+    template<typename T, size_t ROW, size_t COLUMN>
+    auto cofactor_matrix(const matrix<T, ROW, COLUMN> A) {
+        auto res = A;
+        foreach(A,
+            [&A, &res](auto i) {
+                auto E = remove_column(remove_row(A, i.get_row()), i.get_column());
+                res[i] = ((i.get_column() + i.get_row()) % 2 == 0 ? 1 : -1) * determinant(E);
+            });
+        return res;
     }
 }
