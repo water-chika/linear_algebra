@@ -10,6 +10,8 @@ add_library(
     vector.hpp
     vector_space.hpp
     fixsized_vector.hpp
+    combined_reference_vector.hpp
+    combined_reference_matrix.hpp
     linear_algebra.cpp
 )
 target_include_directories(linear_algebra PUBLIC ${CMAKE_CURRENT_SOURCE_DIR})

@@ -241,7 +241,18 @@ namespace linear_algebra {
         }
     }
 
-    auto eliminate(concept_helper::matrix auto&& A, concept_helper::matrix_index auto&& index) {
+    auto& eliminate(concept_helper::matrix auto& A, concept_helper::matrix_index auto&& index) {
+        auto column = index.get_column();
+        auto row = index.get_row();
+        auto pivot = A[make_matrix_pivot_index(column)];
+        if (pivot == 0) {
+            throw std::runtime_error{ "matrix is not invertible" };
+        }
+        auto multier = A[index] / pivot;
+        A.row(row) -= A.row(column)*multier;
+        return A;
+    }
+    auto eliminate(const concept_helper::matrix auto& A, concept_helper::matrix_index auto&& index) {
         auto column = index.get_column();
         auto row = index.get_row();
         auto pivot = A[make_matrix_pivot_index(column)];
@@ -250,10 +261,21 @@ namespace linear_algebra {
         }
         auto multier = A[index] / pivot;
         auto EA = A;
-        EA.row_subtract(row, column, multier);
+        EA.row(row) -= EA.row(column)*multier;
         return EA;
     }
 
+    template<concept_helper::matrix Matrix>
+    auto& eliminate(Matrix& A) {
+        for_index_range(0, A.size().get_column(),
+            [&A](auto column) {
+                for_index_range(column+1, A.size().get_row(),
+                [&A, column](auto row) {
+                        eliminate(A, make_matrix_pivot_index(column).set_row(row));
+                    });
+            });
+        return A;
+    }
     template<concept_helper::matrix Matrix>
     Matrix eliminate(Matrix&& A) {
         Matrix res = A;
@@ -273,14 +295,15 @@ namespace linear_algebra {
         for (auto row = res.size().get_row() - 1; true; row--) {
             for (auto column = res.size().get_row() - 1; true; column--) {
                 if (column != row) {
-                    res.row_subtract(row, column, res[matrix_index<decltype(row)>{}.set_row(row).set_column(column)]);
+                    res.row(row) -= res.row(column) *
+                        res[matrix_index<decltype(row)>{}.set_row(row).set_column(column)];
                 }
                 else {
                     auto pivot = res[make_matrix_pivot_index(row)];
                     if (pivot == 0) {
                         throw std::runtime_error{ "matrix is not invertible" };
                     }
-                    res.row_mul(row, 1/pivot);
+                    res.row(row) *= 1/pivot;
                 }
                 if (column == row) {
                     break;

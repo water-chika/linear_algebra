@@ -62,8 +62,10 @@ namespace linear_algebra {
     }
     template<vector Vector, class T>
         requires vector_element_type<Vector, T>
-    Vector& operator*=(Vector& lhs, const T& rhs) {
-        lhs = lhs * rhs;
+    Vector&& operator*=(Vector&& lhs, const T& rhs) {
+        for (auto& e : lhs) {
+            e *= rhs;
+        }
         return lhs;
     }
     bool operator==(const vector auto& lhs, const vector auto& rhs) {
@@ -99,6 +101,15 @@ namespace linear_algebra {
             res[i] = -lhs[i];
         }
         return res;
+    }
+    vector auto&& operator-=(vector auto&& lhs, const vector auto& rhs) {
+        if (lhs.size() != rhs.size()) {
+            throw std::runtime_error{ "size not equal" };
+        }
+        for (size_t i = 0; i < lhs.size(); i++) {
+            lhs[i] -= rhs[i];
+        }
+        return lhs;
     }
     auto dot_product(const vector auto& lhs, const vector auto& rhs) {
         if (lhs.size() != rhs.size()) {

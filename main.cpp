@@ -1,4 +1,5 @@
 #include "matrix.hpp"
+#include "combined_reference_matrix.hpp"
 #include <iostream>
 #include <measure_duration.hpp>
 #include <concepts>
@@ -77,8 +78,10 @@ public:
                         {1, 1, 2}
                     };
                     std::cout << "A = " << A << std::endl;
-                    auto A_I = concatenate_columns(A, identity_matrix<Number, 3>());
-                    std::cout << "A inverse = " << select_columns<3, 4, 5>(back_substitution(eliminate(A_I))) << std::endl;
+                    auto A_i = identity_matrix<Number, 3>();
+                    auto A_I = combined_reference_matrix{A, A_i};
+                    back_substitution(eliminate(A_I));
+                    std::cout << "A inverse = " << A_i << std::endl;
                     auto B = matrix<Number, 3, 3>{
                         {2, -1, -1},
                         {-1, 2, -1},
