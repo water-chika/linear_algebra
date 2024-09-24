@@ -8,8 +8,8 @@ namespace linear_algebra {
 	struct fixsized_matrix_index {
 		size_t row;
 		size_t column;
-		auto get_row() { return row; }
-		auto get_column() { return column; }
+		constexpr auto get_row() { return row; }
+		constexpr auto get_column() { return column; }
 		auto& set_row(size_t r) { row = r; return *this; }
 		auto& set_column(size_t c) { column = c; return *this; }
 	};
@@ -31,6 +31,13 @@ namespace linear_algebra {
 				i++;
 			}
 		}
+        fixsized_matrix(identity_matrix_type I) : m_columns{} {
+            for (size_t i = 0; i < COLUMN; i++) {
+                for (size_t j = 0; j < ROW; j++) {
+                    m_columns[i][j] = ((i == j) ? 1 : 0);
+                }
+            }
+        }
 
 		const auto& column(size_t i) const {
 			return m_columns[i];

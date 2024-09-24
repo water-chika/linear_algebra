@@ -62,6 +62,10 @@ namespace linear_algebra {
         column_vector() : fixsized_vector<T, size>{} {}
         column_vector(fixsized_vector<T, size> v) : fixsized_vector<T, size>{ v } {}
     };
+
+    struct identity_matrix_type {};
+    identity_matrix_type I;
+
     template<class T, size_t Rows, size_t Columns>
     class matrix {
     public:
@@ -78,6 +82,13 @@ namespace linear_algebra {
             for (auto col : columns) {
                 m_columns[i] = col;
                 i++;
+            }
+        }
+        matrix(identity_matrix_type I) : m_columns{} {
+            for (size_t i = 0; i < Columns; i++) {
+                for (size_t j = 0; j < Rows; j++) {
+                    m_columns[i][j] = ((i == j) ? 1 : 0);
+                }
             }
         }
         const fixsized_vector<T, m>& column(size_t i) const {
@@ -201,10 +212,10 @@ namespace linear_algebra {
         return res;
     }
     auto concatenate_columns(concept_helper::matrix auto&& A, concept_helper::matrix auto&& B) {
-        using element_type = std::remove_cvref_t<decltype(A[make_matrix_pivot_index(0)])>;
+        using element_type = std::remove_cvref_t<decltype(A[A.size()])>;
         matrix<element_type,
             A.size().get_row(), A.size().get_column() + B.size().get_column()> res{};
-        static_assert(A.size().get_row() == B.size().get_row());
+        assert(A.size().get_row() == B.size().get_row());
         for (int i = 0; i < A.size().get_column(); i++) {
             res.column(i) = A.column(i);
         }
