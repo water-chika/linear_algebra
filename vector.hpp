@@ -131,14 +131,14 @@ namespace linear_algebra {
         }
         return res;
     }
-    vector_or_vector_reference auto&& operator-=(vector_or_vector_reference auto&& lhs, const vector_or_vector_reference auto& rhs) {
+    auto&& operator-=(vector_or_vector_reference auto&& lhs, const vector_or_vector_reference auto& rhs) {
         if (lhs.size() != rhs.size()) {
             throw std::runtime_error{ "size not equal" };
         }
         for (size_t i = 0; i < lhs.size(); i++) {
             lhs[i] -= rhs[i];
         }
-        return lhs;
+        return std::forward<decltype(lhs)>(lhs);
     }
     auto dot_product(const vector_or_vector_reference auto& lhs, const vector_or_vector_reference auto& rhs) {
         if (lhs.size() != rhs.size()) {
