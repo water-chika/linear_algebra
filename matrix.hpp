@@ -25,7 +25,7 @@ namespace linear_algebra {
         };
         template <class Matrix>
         concept matrix = requires (Matrix m, int i) {
-            { m.size() } -> matrix_size;
+            m.size();
             m.column(i);
             m.row(i);
         };
@@ -176,7 +176,7 @@ namespace linear_algebra {
                 out << "{";
                 iterate_from_0_to(m.size().get_column(),
                     [&out, &m, &row](auto column) {
-                        out << std::setw(8) << m[linear_algebra::matrix_index<decltype(row)>{}.set_row(row).set_column(column)] << ",";
+                        out << std::setw(8) << m[m.size().set_row(row).set_column(column)] << ",";
                     });
                 out << "}," << std::endl;
             });
