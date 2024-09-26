@@ -396,10 +396,10 @@ namespace linear_algebra {
     template<concept_helper::matrix Matrix>
     auto determinant(Matrix A) {
         auto U = eliminate(A);
-        std::remove_cvref_t<decltype(A[{0, 0}]) > res = 1;
-        iterate_from_0_to(A.size().get_row(),
-            [&res, &A](auto i) {
-                res *= A[{i, i}];
+        std::remove_cvref_t<decltype(U[{0, 0}]) > res = 1;
+        iterate_from_0_to(U.size().get_row(),
+            [&res, &U](auto i) {
+                res *= U[{i, i}];
             });
         return res;
     }
