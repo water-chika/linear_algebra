@@ -302,7 +302,7 @@ namespace linear_algebra {
             for (auto column = A.size().get_row() - 1; true; column--) {
                 if (column != row) {
                     A.row(row) -= A.row(column) *
-                        A[matrix_index<decltype(row)>{}.set_row(row).set_column(column)];
+                        A[{row, column}];
                 }
                 else {
                     auto pivot = A[std::remove_cvref_t<decltype(A.size())>{}.set_row(row).set_column(row)];

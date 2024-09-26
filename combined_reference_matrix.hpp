@@ -21,26 +21,15 @@ namespace linear_algebra{
     template<class T, class U>
     constexpr bool is_vector_reference_type<row_type<T,U>> = true;
 
-    template<class T, size_t ROW, size_t COLUMN1, size_t COLUMN2>
+    template<concept_helper::matrix M1, concept_helper::matrix M2>
     class combined_reference_matrix {
     public:
-        using M1 = matrix<T, ROW, COLUMN1>;
-        using M2 = matrix<T, ROW, COLUMN2>;
-        using index_type = M1::index_type;
+        using index_type = typename M1::index_type;
         combined_reference_matrix(M1& left, M2& right)
             : left_half{left}, right_half{right}
         {
             assert(left_half.size().get_row()
                     == right_half.size().get_row());
-        }
-        operator matrix<T, ROW, COLUMN1+COLUMN2>() {
-            matrix<T, ROW, COLUMN1+COLUMN2> res{};
-            foreach(res,
-                    [&res, this](auto i) {
-                        res[i] = i.size().get_column() < COLUMN1 ? left_half[i] : right_half[i-COLUMN1];
-                    }
-                   );
-            return res;
         }
         auto size() {
             auto l_size = left_half.size();
@@ -58,10 +47,10 @@ namespace linear_algebra{
             }
         }
         auto row(size_t i) const {
-            return row_type<combined_reference_matrix, fixsized_vector<T, COLUMN1 + COLUMN2>>{*this, i};
+            return row_type < combined_reference_matrix, fixsized_vector<std::remove_cvref_t<decltype(left_half[{0, 0}])>, left_half.size().get_column() + right_half.size().get_column() >> {*this, i};
         }
         auto row(size_t i) {
-            return row_type<combined_reference_matrix, fixsized_vector<T, COLUMN1 + COLUMN2>>{*this, i};
+            return row_type<combined_reference_matrix, fixsized_vector<std::remove_cvref_t<decltype(left_half[{0, 0}])>, left_half.size().get_column() + right_half.size().get_column()>>{*this, i};
         }
         auto& operator[](index_type i) {
             auto l_size = left_half.size().get_column();
@@ -76,9 +65,9 @@ namespace linear_algebra{
         M1& left_half;
         M2& right_half;
     };
-    template<typename T, size_t ROW>
-    auto inverse(matrix<T, ROW, ROW> A) {
-        auto res = identity_matrix<T, ROW>();
+
+    auto inverse(concept_helper::matrix auto A) {
+        std::remove_cvref_t<decltype(A)> res = I;
         auto A_I = combined_reference_matrix{A, res};
         do_back_substitution(do_eliminate(A_I));
         return res;

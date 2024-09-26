@@ -8,8 +8,8 @@ namespace linear_algebra {
 	struct fixsized_matrix_index {
 		size_t row;
 		size_t column;
-		constexpr auto get_row() { return row; }
-		constexpr auto get_column() { return column; }
+		constexpr auto get_row() const { return row; }
+		constexpr auto get_column() const { return column; }
 		auto& set_row(size_t r) { row = r; return *this; }
 		auto& set_column(size_t c) { column = c; return *this; }
 	};
@@ -53,7 +53,7 @@ namespace linear_algebra {
 			return res;
 		}
 		const auto row(size_t i) const {
-			fixsized_pointer_vector<T, COLUMN> res{};
+			fixsized_pointer_vector<const T, COLUMN> res{};
 			for (size_t j = 0; j < COLUMN; j++) {
 				res.set(j, &m_columns[j][i]);
 			}
@@ -101,6 +101,15 @@ namespace linear_algebra {
 				return dot_product(lhs.row(row), rhs.column(col));
 			}
 		);
+	}
+	template<class T, size_t m, size_t n>
+	auto operator*(const fixsized_matrix<T, m, n>& lhs, const fixsized_vector<T, n> v) {
+		fixsized_vector<T, m> res{};
+		foreach_index(res,
+			[&res, &lhs, &v](auto i) {
+				res[i] = dot_product(lhs.row(i), v);
+			});
+		return res;
 	}
 
 	template<typename T, size_t ROW, size_t COLUMN>
