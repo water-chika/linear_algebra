@@ -165,6 +165,23 @@ namespace linear_algebra {
             }
         );
     }
+    bool operator==(const concept_helper::matrix_index auto& i, const concept_helper::matrix_index auto& j) {
+        return i.get_column() == j.get_column() && i.get_row() == j.get_row();
+    }
+    bool operator==(const concept_helper::matrix auto& A, const concept_helper::matrix auto& B) {
+        if (A.size() != B.size()) {
+            return false;
+        }
+        auto [row_count, column_count] = A.size();
+        for (decltype(row_count) i = 0; i < row_count; i++) {
+            for (decltype(column_count) j = 0; j < column_count; j++) {
+                if (A[{i,j}] != B[{i,j}]) {
+                    return false;
+                }
+            }
+        }
+        return true;
+    }
     auto& operator<<(std::ostream& out, linear_algebra::concept_helper::matrix auto&& A) {
         out << "{" << std::endl;
         auto [row_count, column_count] = A.size();
