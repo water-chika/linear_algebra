@@ -10,6 +10,7 @@ add_library(
     vector.hpp
     vector_space.hpp
     fixsized_vector.hpp
+    fixsized_matrix.hpp
     combined_reference_vector.hpp
     combined_reference_matrix.hpp
     linear_algebra.cpp

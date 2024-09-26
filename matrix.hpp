@@ -52,10 +52,7 @@ namespace linear_algebra {
         T m_row;
         T m_column;
     };
-    template<class T>
-    auto make_matrix_pivot_index(T i) {
-        return matrix_index<T>{}.set_row(i).set_column(i);
-    }
+
     template<class T, size_t size>
     class column_vector : public fixsized_vector<T, size> {
     public:
@@ -226,7 +223,7 @@ namespace linear_algebra {
     }
     template<int... Columns>
     auto select_columns(concept_helper::matrix auto&& A) {
-        using element_type = std::remove_cvref_t<decltype(A[make_matrix_pivot_index(0)])>;
+        using element_type = std::remove_cvref_t<decltype(A[A.size()])>;
         constexpr auto column_indices = std::array{ Columns... };
         matrix<element_type,
             A.size().get_row(), column_indices.size()> res{};
@@ -255,7 +252,9 @@ namespace linear_algebra {
     auto& do_eliminate(concept_helper::matrix auto& A, concept_helper::matrix_index auto&& index) {
         auto column = index.get_column();
         auto row = index.get_row();
-        auto pivot = A[make_matrix_pivot_index(column)];
+        std::remove_cvref_t<decltype(index)> pivot_index{};
+        pivot_index.set_column(column).set_row(column);
+        auto pivot = A[pivot_index];
         if (pivot == 0) {
             throw std::runtime_error{ "matrix is not invertible" };
         }
@@ -266,7 +265,9 @@ namespace linear_algebra {
     auto eliminate(const concept_helper::matrix auto& A, concept_helper::matrix_index auto&& index) {
         auto column = index.get_column();
         auto row = index.get_row();
-        auto pivot = A[make_matrix_pivot_index(column)];
+        std::remove_cvref_t<decltype(index)> pivot_index{};
+        pivot_index.set_column(column).set_row(column);
+        auto pivot = A[pivot_index];
         if (pivot == 0) {
             throw std::runtime_error{ "matrix is not invertible" };
         }
@@ -282,7 +283,7 @@ namespace linear_algebra {
             [&A](auto column) {
                 for_index_range(column+1, A.size().get_row(),
                 [&A, column](auto row) {
-                        do_eliminate(A, make_matrix_pivot_index(column).set_row(row));
+                        do_eliminate(A, A.size().set_column(column).set_row(row));
                     });
             });
         return A;
@@ -294,7 +295,7 @@ namespace linear_algebra {
             [&res](auto column) {
                 for_index_range(column+1, res.size().get_row(),
                 [&res, column](auto row) {
-                        res = eliminate(res, make_matrix_pivot_index(column).set_row(row));
+                        res = eliminate(res, res.size().set_column(column).set_row(row));
                     });
             });
         return res;
@@ -310,7 +311,7 @@ namespace linear_algebra {
                         res[matrix_index<decltype(row)>{}.set_row(row).set_column(column)];
                 }
                 else {
-                    auto pivot = res[make_matrix_pivot_index(row)];
+                    auto pivot = res[std::remove_cvref_t<decltype(A.size())>{}.set_row(row).set_column(row)];
                     if (pivot == 0) {
                         throw std::runtime_error{ "matrix is not invertible" };
                     }
@@ -335,7 +336,7 @@ namespace linear_algebra {
                         A[matrix_index<decltype(row)>{}.set_row(row).set_column(column)];
                 }
                 else {
-                    auto pivot = A[make_matrix_pivot_index(row)];
+                    auto pivot = A[std::remove_cvref_t<decltype(A.size())>{}.set_row(row).set_column(row)];
                     if (pivot == 0) {
                         throw std::runtime_error{ "matrix is not invertible" };
                     }
@@ -417,6 +418,17 @@ namespace linear_algebra {
                 Q.column(i) = A.column(i >= column ? i + 1 : i);
             });
         return Q;
+    }
+
+    template<concept_helper::matrix Matrix>
+    auto determinant(Matrix A) {
+        auto U = eliminate(A);
+        std::remove_cvref_t<decltype(A[A.size()])> res = 1;
+        iterate_from_0_to(A.size().get_row(),
+            [&res, &A](auto i) {
+                res *= A[A.size().set_row(i).set_column(i)];
+            });
+        return res;
     }
 
     template<typename T, size_t ROW, size_t COLUMN>

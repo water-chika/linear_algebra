@@ -26,6 +26,7 @@ namespace linear_algebra{
     public:
         using M1 = matrix<T, ROW, COLUMN1>;
         using M2 = matrix<T, ROW, COLUMN2>;
+        using index_type = M1::index_type;
         combined_reference_matrix(M1& left, M2& right)
             : left_half{left}, right_half{right}
         {
@@ -62,7 +63,7 @@ namespace linear_algebra{
         auto row(size_t i) {
             return row_type<combined_reference_matrix, fixsized_vector<T, COLUMN1 + COLUMN2>>{*this, i};
         }
-        auto& operator[](concept_helper::matrix_index auto i) {
+        auto& operator[](index_type i) {
             auto l_size = left_half.size().get_column();
             if (i.get_column() < l_size) {
                 return left_half[i];

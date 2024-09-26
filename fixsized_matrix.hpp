@@ -114,22 +114,6 @@ namespace linear_algebra {
 	}
 
 	template<typename T, size_t ROW, size_t COLUMN>
-	auto determinant(const fixsized_matrix<T, ROW, COLUMN> A) {
-		std::remove_cvref_t<decltype(A[A.size()])> res{};
-		iterate_from_0_to(A.size().get_row(),
-			[&res, &A](auto i) {
-				auto E = remove_column(remove_row(A, 0), i);
-				auto C = (i % 2 == 0 ? 1 : -1) * determinant(E);
-				res += A.row(0)[i] * C;
-			});
-		return res;
-	}
-	template<>
-	auto determinant<double, 1, 1>(const fixsized_matrix<double, 1, 1> A) {
-		return A[fixsized_matrix_index{ 0,0 }];
-	}
-
-	template<typename T, size_t ROW, size_t COLUMN>
 	auto cofactor_matrix(const fixsized_matrix<T, ROW, COLUMN> A) {
 		auto res = A;
 		foreach(A,
