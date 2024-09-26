@@ -29,7 +29,7 @@ public:
                 std::cout << A.column(1) << std::endl;
                 std::cout << A.row(0) << std::endl;
                 std::cout << A.row(1) << std::endl;
-                A.row_subtract(1, 0, 2);
+                A.row(1) -= A.row(0) * 2;
                 std::cout << "After subtract 2 * row 0 from row 1, A is below: " << A << std::endl;
                 
                 auto U = linear_algebra::eliminate(A);

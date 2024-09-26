@@ -31,9 +31,7 @@ namespace linear_algebra {
         };
     }
     template<class T>
-    class matrix_index {
-    public:
-        constexpr matrix_index() : m_row{}, m_column{} {}
+    struct matrix_index {
         constexpr auto set_row(T row) {
             m_row = row;
             return *this;
@@ -48,7 +46,6 @@ namespace linear_algebra {
         constexpr auto get_column() const {
             return m_column;
         }
-    private:
         T m_row;
         T m_column;
     };
@@ -110,27 +107,17 @@ namespace linear_algebra {
             }
             return res;
         }
-        void row_subtract(size_t i, size_t j, T multi) {
-            for (size_t k = 0; k < Columns; k++) {
-                m_columns[k][i] -= multi * m_columns[k][j];
-            }
-        }
-        void row_mul(size_t i, T multi) {
-            for (size_t k = 0; k < Columns; k++) {
-                m_columns[k][i] *= multi;
-            }
-        }
         static auto create_matrix_by_get_element(auto&& get_element) {
             return matrix{ create_columns_by_get_element(get_element) };
         }
-        auto& operator[](concept_helper::matrix_index auto&& i) {
+        auto& operator[](index_type i) {
             return m_columns[i.get_column()][i.get_row()];
         }
-        const auto& operator[](concept_helper::matrix_index auto&& i) const {
+        const auto& operator[](index_type i) const {
             return m_columns[i.get_column()][i.get_row()];
         }
-        static constexpr auto size() {
-            return matrix_index<size_t>{}.set_column(Columns).set_row(Rows);
+        static constexpr index_type size() {
+            return index_type{Rows, Columns};
         }
     private:
         static auto create_columns_by_get_element(auto&& get_element) {
@@ -167,24 +154,26 @@ namespace linear_algebra {
     template<concept_helper::matrix Matrix, class F>
         requires std::invocable<F, typename Matrix::index_type>
     void foreach(Matrix A, F fn) {
-        iterate_from_0_to(A.size().get_row(),
-            [&A, &fn](auto i) {
-                iterate_from_0_to(A.size().get_column(),
+        auto [row, column] = A.size();
+        iterate_from_0_to(row,
+            [&A, &fn, column](auto i) {
+                iterate_from_0_to(column,
                     [&A, &fn, i](auto j) {
                         using index_t = typename Matrix::index_type;
-                        fn(index_t{}.set_row(i).set_column(j));
+                        fn(index_t{i, j});
                     });
             }
         );
     }
-    auto& operator<<(std::ostream& out, linear_algebra::concept_helper::matrix auto&& m) {
+    auto& operator<<(std::ostream& out, linear_algebra::concept_helper::matrix auto&& A) {
         out << "{" << std::endl;
-        iterate_from_0_to(m.size().get_row(),
-            [&out, &m](auto row) {
+        auto [row_count, column_count] = A.size();
+        iterate_from_0_to(row_count,
+            [&out, &A, column_count](auto row) {
                 out << "{";
-                iterate_from_0_to(m.size().get_column(),
-                    [&out, &m, &row](auto column) {
-                        out << std::setw(8) << m[m.size().set_row(row).set_column(column)] << ",";
+                iterate_from_0_to(column_count,
+                    [&out, &A, &row](auto column) {
+                        out << std::setw(8) << A[{row, column}] << ",";
                     });
                 out << "}," << std::endl;
             });
@@ -209,7 +198,7 @@ namespace linear_algebra {
         return res;
     }
     auto concatenate_columns(concept_helper::matrix auto&& A, concept_helper::matrix auto&& B) {
-        using element_type = std::remove_cvref_t<decltype(A[A.size()])>;
+        using element_type = std::remove_cvref_t<decltype(A[{0, 0}])>;
         matrix<element_type,
             A.size().get_row(), A.size().get_column() + B.size().get_column()> res{};
         assert(A.size().get_row() == B.size().get_row());
@@ -252,9 +241,7 @@ namespace linear_algebra {
     auto& do_eliminate(concept_helper::matrix auto& A, concept_helper::matrix_index auto&& index) {
         auto column = index.get_column();
         auto row = index.get_row();
-        std::remove_cvref_t<decltype(index)> pivot_index{};
-        pivot_index.set_column(column).set_row(column);
-        auto pivot = A[pivot_index];
+        auto pivot = A[{column, column}];
         if (pivot == 0) {
             throw std::runtime_error{ "matrix is not invertible" };
         }
@@ -262,12 +249,11 @@ namespace linear_algebra {
         A.row(row) -= A.row(column)*multier;
         return A;
     }
-    auto eliminate(const concept_helper::matrix auto& A, concept_helper::matrix_index auto&& index) {
+    template<concept_helper::matrix Matrix>
+    auto eliminate(Matrix& A, typename Matrix::index_type index) {
         auto column = index.get_column();
         auto row = index.get_row();
-        std::remove_cvref_t<decltype(index)> pivot_index{};
-        pivot_index.set_column(column).set_row(column);
-        auto pivot = A[pivot_index];
+        auto pivot = A[{column, column}];
         if (pivot == 0) {
             throw std::runtime_error{ "matrix is not invertible" };
         }
@@ -283,50 +269,16 @@ namespace linear_algebra {
             [&A](auto column) {
                 for_index_range(column+1, A.size().get_row(),
                 [&A, column](auto row) {
-                        do_eliminate(A, A.size().set_column(column).set_row(row));
-                    });
+                        do_eliminate(A, typename Matrix::index_type{ row, column });
+            });
             });
         return A;
     }
     template<concept_helper::matrix Matrix>
-    Matrix eliminate(Matrix&& A) {
-        Matrix res = A;
-        for_index_range(0, res.size().get_column(),
-            [&res](auto column) {
-                for_index_range(column+1, res.size().get_row(),
-                [&res, column](auto row) {
-                        res = eliminate(res, res.size().set_column(column).set_row(row));
-                    });
-            });
-        return res;
+    Matrix eliminate(Matrix A) {
+        return do_eliminate(A);
     }
     
-    template<concept_helper::matrix Matrix>
-    Matrix back_substitution(const Matrix& A) {
-        Matrix res = A;
-        for (auto row = res.size().get_row() - 1; true; row--) {
-            for (auto column = res.size().get_row() - 1; true; column--) {
-                if (column != row) {
-                    res.row(row) -= res.row(column) *
-                        res[matrix_index<decltype(row)>{}.set_row(row).set_column(column)];
-                }
-                else {
-                    auto pivot = res[std::remove_cvref_t<decltype(A.size())>{}.set_row(row).set_column(row)];
-                    if (pivot == 0) {
-                        throw std::runtime_error{ "matrix is not invertible" };
-                    }
-                    res.row(row) *= 1/pivot;
-                }
-                if (column == row) {
-                    break;
-                }
-            }
-            if (row == 0) {
-                break;
-            }
-        }
-        return res;
-    }
     template<concept_helper::matrix Matrix>
     Matrix& do_back_substitution(Matrix& A) {
         for (auto row = A.size().get_row() - 1; true; row--) {
@@ -340,7 +292,7 @@ namespace linear_algebra {
                     if (pivot == 0) {
                         throw std::runtime_error{ "matrix is not invertible" };
                     }
-                    A.row(row) *= 1/pivot;
+                    A.row(row) *= 1 / pivot;
                 }
                 if (column == row) {
                     break;
@@ -351,6 +303,10 @@ namespace linear_algebra {
             }
         }
         return A;
+    }
+    template<concept_helper::matrix Matrix>
+    Matrix back_substitution(Matrix A) {
+        return do_back_substitution(A);
     }
 
     template<concept_helper::matrix Matrix>
@@ -390,7 +346,7 @@ namespace linear_algebra {
                         auto q = Q.column(j);
                         auto b = Q.column(i);
                         auto q_b = dot_product(q, b);
-                        R[R.size().set_row(j).set_column(i)] = q_b;
+                        R[{j, i}] = q_b;
                         Q.column(i) -= q * q_b;
                     });
                 auto l = length(Q.column(i));
@@ -423,37 +379,22 @@ namespace linear_algebra {
     template<concept_helper::matrix Matrix>
     auto determinant(Matrix A) {
         auto U = eliminate(A);
-        std::remove_cvref_t<decltype(A[A.size()])> res = 1;
+        std::remove_cvref_t<decltype(A[{0, 0}]) > res = 1;
         iterate_from_0_to(A.size().get_row(),
             [&res, &A](auto i) {
-                res *= A[A.size().set_row(i).set_column(i)];
+                res *= A[{i, i}];
             });
         return res;
-    }
-
-    template<typename T, size_t ROW, size_t COLUMN>
-    auto determinant(const matrix<T, ROW, COLUMN> A) {
-        std::remove_cvref_t<decltype(A[A.size()])> res{};
-        iterate_from_0_to(A.size().get_row(),
-            [&res, &A](auto i) {
-                auto E = remove_column(remove_row(A, 0), i);
-                auto C = (i % 2 == 0 ? 1 : -1) * determinant(E);
-                res += A.row(0)[i] * C;
-            });
-        return res;
-    }
-    template<>
-    auto determinant<double, 1, 1>(const matrix<double, 1, 1> A) {
-        return A[A.size().set_column(0).set_row(0)];
     }
 
     template<typename T, size_t ROW, size_t COLUMN>
     auto cofactor_matrix(const matrix<T, ROW, COLUMN> A) {
         auto res = A;
         foreach(A,
-            [&A, &res](auto i) {
-                auto E = remove_column(remove_row(A, i.get_row()), i.get_column());
-                res[i] = ((i.get_column() + i.get_row()) % 2 == 0 ? 1 : -1) * determinant(E);
+            [&A, &res](auto i_j) {
+                auto [i, j] = i_j;
+                auto E = remove_column(remove_row(A, i), j);
+                res[i_j] = ((i + j) % 2 == 0 ? 1 : -1) * determinant(E);
             });
         return res;
     }
