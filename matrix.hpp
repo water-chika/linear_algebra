@@ -282,13 +282,25 @@ namespace linear_algebra {
 
     template<concept_helper::matrix Matrix>
     auto& do_eliminate(Matrix& A) {
-        for_index_range(0, A.size().get_column(),
+        auto [row_count, column_count] = A.size();
+        for_index_range(0, std::min(row_count, column_count),
             [&A](auto column) {
-                for_index_range(column+1, A.size().get_row(),
-                [&A, column](auto row) {
-                        do_eliminate(A, typename Matrix::index_type{ row, column });
-            });
-            });
+                if (A[{column, column}] == 0) {
+                    for (decltype(column) row = column + 1; row < A.size().get_row(); row++) {
+                        if (A[{row, column}] != 0) {
+                            swap(A.row(column), A.row(row));
+                            break;
+                        }
+                    }
+                }
+                if (A[{column, column}] != 0) {
+                    for_index_range(column + 1, A.size().get_row(),
+                        [&A, column](auto row) {
+                            do_eliminate(A, typename Matrix::index_type{ row, column });
+                        });
+                }
+            }
+        );
         return A;
     }
     template<concept_helper::matrix Matrix>

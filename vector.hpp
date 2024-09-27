@@ -11,7 +11,7 @@ namespace linear_algebra {
     template<class T>
     constexpr bool is_vector_reference_type = false;
     template<class T>
-    using referenced_type = T::referenced_type;
+    using referenced_type = typename T::referenced_type;
 
     template<class T>
     concept vector = is_vector_type<std::remove_cvref_t<T>> && requires (T t1, T t2) {
@@ -23,7 +23,7 @@ namespace linear_algebra {
         { v[0] } -> std::convertible_to<ElementType>;
     };
     template<class T>
-    concept vector_reference = is_vector_reference_type<std::remove_cvref_t<T>> && vector<referenced_type<T>>;
+    concept vector_reference = is_vector_reference_type<std::remove_cvref_t<T>> && vector<referenced_type<std::remove_cvref_t<T>>>;
     template<class Vector, class VectorReference>
     concept vector_reference_type = vector<Vector> && vector_reference<VectorReference> && std::same_as<Vector, referenced_type<Vector>>;
     template<class T>
@@ -56,8 +56,8 @@ namespace linear_algebra {
     auto end(vector_or_vector_reference auto& v) {
         return vector_iterator{v, v.size()};
     }
-    template<vector Vector>
-    void foreach_index(Vector v, auto f) {
+
+    void foreach_index(vector_or_vector_reference auto&& v, auto&& f) {
         std::remove_cvref_t<decltype(v.size())> i = 0;
         while (i < v.size()) {
             f(i);
@@ -227,5 +227,14 @@ namespace linear_algebra {
             orthonormal_vectors.emplace_back(q);
         }
         return orthonormal_vectors;
+    }
+
+    void swap(vector_or_vector_reference auto&& lhs, vector_or_vector_reference auto&& rhs) {
+        foreach_index(lhs,
+            [&lhs, &rhs](auto i) {
+                using std::swap;
+                swap(lhs[i], rhs[i]);
+            }
+        );
     }
 }
