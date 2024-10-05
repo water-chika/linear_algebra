@@ -21,6 +21,13 @@ namespace linear_algebra{
     template<class T, class U>
     constexpr bool is_vector_reference_type<row_type<T,U>> = true;
 
+    template<class T>
+    constexpr size_t fixsized_matrix_column_count = 0;
+    template<class T, size_t COLUMN, size_t ROW>
+    constexpr size_t fixsized_matrix_column_count<fixsized_matrix<T, COLUMN, ROW>> = COLUMN;
+    template<class T, size_t COLUMN, size_t ROW>
+    constexpr size_t fixsized_matrix_column_count<matrix<T, COLUMN, ROW>> = COLUMN;
+
     template<concept_helper::matrix M1, concept_helper::matrix M2>
     class combined_reference_matrix {
     public:
@@ -47,10 +54,26 @@ namespace linear_algebra{
             }
         }
         auto row(size_t i) const {
-            return row_type < combined_reference_matrix, fixsized_vector<std::remove_cvref_t<decltype(left_half[{0, 0}])>, left_half.size().get_column() + right_half.size().get_column() >> {*this, i};
+            return
+                row_type<
+                    combined_reference_matrix,
+                    fixsized_vector<
+                        std::remove_cvref_t<decltype(left_half[{0, 0}])>,
+                        fixsized_matrix_column_count<M1>() + fixsized_matrix_column_count<M2>()
+                    >
+                >
+                {*this, i};
         }
         auto row(size_t i) {
-            return row_type<combined_reference_matrix, fixsized_vector<std::remove_cvref_t<decltype(left_half[{0, 0}])>, left_half.size().get_column() + right_half.size().get_column()>>{*this, i};
+            return
+                row_type<
+                    combined_reference_matrix,
+                    fixsized_vector<
+                        std::remove_cvref_t<decltype(left_half[{0, 0}])>,
+                        fixsized_matrix_column_count<M1> + fixsized_matrix_column_count<M2>
+                    >
+                >
+                {*this, i};
         }
         auto& operator[](index_type i) {
             auto l_size = left_half.size().get_column();
