@@ -94,6 +94,18 @@ namespace linear_algebra {
 		std::array<fixsized_vector<T, ROW>, COLUMN> m_columns;
 	};
 
+	template<class T, size_t COLUMN, size_t ROW>
+	constexpr size_t fixsized_matrix_column_count<fixsized_matrix<T, COLUMN, ROW>> = COLUMN;
+
+	template<class T, size_t Rows, size_t Columns>
+	auto make_fixsized_matrix_with_columns(std::initializer_list<fixsized_vector<T, Rows>> columns) {
+		fixsized_matrix<T, Rows, Columns> res{};
+		for (int i = 0; i < columns.size(); i++) {
+			res.column(i) = *(columns.begin() + i);
+		}
+		return res;
+	}
+
 	template<class T, size_t m, size_t n, size_t p>
 	auto operator*(fixsized_matrix<T, m, n> lhs, fixsized_matrix<T, n, p> rhs) {
 		return fixsized_matrix<T, m, p>::create_matrix_by_get_element(

@@ -21,13 +21,6 @@ namespace linear_algebra{
     template<class T, class U>
     constexpr bool is_vector_reference_type<row_type<T,U>> = true;
 
-    template<class T>
-    constexpr size_t fixsized_matrix_column_count = 0;
-    template<class T, size_t COLUMN, size_t ROW>
-    constexpr size_t fixsized_matrix_column_count<fixsized_matrix<T, COLUMN, ROW>> = COLUMN;
-    template<class T, size_t COLUMN, size_t ROW>
-    constexpr size_t fixsized_matrix_column_count<matrix<T, COLUMN, ROW>> = COLUMN;
-
     template<concept_helper::matrix M1, concept_helper::matrix M2>
     class combined_reference_matrix {
     public:
