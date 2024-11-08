@@ -15,4 +15,4 @@ add_library(
     linear_algebra.cpp
 )
 target_include_directories(linear_algebra PUBLIC ${CMAKE_CURRENT_SOURCE_DIR})
-set_target_properties(linear_algebra PROPERTIES CXX_STANDARD 23)
+target_compile_features(linear_algebra PUBLIC cxx_std_23)
