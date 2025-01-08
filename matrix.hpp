@@ -101,6 +101,16 @@ namespace linear_algebra {
         return true;
     }
 
+    auto operator/(
+            linear_algebra::concept_helper::matrix auto&& A,
+            linear_algebra::concept_helper::matrix_element auto t) {
+        auto B = A;
+        foreach(B, [&B, t](auto index) {
+                B[index] /= t;
+                });
+        return B;
+    }
+
     auto& operator<<(std::ostream& out, linear_algebra::concept_helper::matrix auto&& A) {
         out << "{" << std::endl;
         auto [row_count, column_count] = A.size();
