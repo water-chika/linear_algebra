@@ -25,6 +25,8 @@ namespace linear_algebra{
     class combined_reference_matrix {
     public:
         using index_type = typename M1::index_type;
+        using left_matrix_type = M1;
+        using right_matrix_type = M2;
         combined_reference_matrix(M1& left, M2& right)
             : left_half{left}, right_half{right}
         {
@@ -88,5 +90,15 @@ namespace linear_algebra{
         do_back_substitution(do_eliminate(A_I));
         return res;
     }
+    template<class Matrix>
+    concept is_combined_reference_matrix_type = concept_helper::matrix<Matrix> && requires (Matrix m) {
+        typename Matrix::left_matrix_type;
+        typename Matrix::right_matrix_type;
+    };
+    template<is_combined_reference_matrix_type Matrix>
+    class element_type_struct<Matrix> {
+    public:
+        using type = typename Matrix::left_matrix_type;
+    };
 }
 

@@ -89,7 +89,11 @@ namespace linear_algebra {
         return A[typename M::index_type{}];
     }
     template<concept_helper::matrix Matrix>
-    using element_type = std::remove_cvref_t<typeof(get_element<Matrix>())>;
+    struct element_type_struct<Matrix> {
+    public:
+        using type = std::remove_cvref_t<typeof(get_element<Matrix>())>;
+    };
+
     template<concept_helper::matrix Matrix, class F>
         requires std::invocable<F, element_type<Matrix>&>
     void foreach_element(Matrix& A, F fn) {
@@ -160,7 +164,7 @@ namespace linear_algebra {
         auto column = index.get_column();
         auto row = index.get_row();
         auto pivot = A[{column, column}];
-        if (pivot == 0) {
+        if (pivot == static_cast<typeof(pivot)>(0)) {
             throw std::runtime_error{ "matrix is not invertible" };
         }
         auto multier = A[index] / pivot;
@@ -173,15 +177,17 @@ namespace linear_algebra {
         auto [row_count, column_count] = A.size();
         for_index_range(0, std::min(row_count, column_count),
             [&A](auto column) {
-                if (A[{column, column}] == 0) {
+                auto pivot = A[{column, column}];
+                auto zero = static_cast<typeof(pivot)>(0);
+                if (pivot == zero) {
                     for (decltype(column) row = column + 1; row < A.size().get_row(); row++) {
-                        if (A[{row, column}] != 0) {
+                        if (A[{row, column}] != zero) {
                             swap(A.row(column), A.row(row));
                             break;
                         }
                     }
                 }
-                if (A[{column, column}] != 0) {
+                if (A[{column, column}] != zero) {
                     for_index_range(column + 1, A.size().get_row(),
                         [&A, column](auto row) {
                             do_eliminate(A, typename Matrix::index_type{ row, column });
@@ -206,10 +212,12 @@ namespace linear_algebra {
                 }
                 else {
                     auto pivot = A[std::remove_cvref_t<decltype(A.size())>{}.set_row(row).set_column(row)];
-                    if (pivot == 0) {
+                    auto zero = typeof(pivot){0};
+                    if (pivot == zero) {
                         throw std::runtime_error{ "matrix is not invertible" };
                     }
-                    A.row(row) *= 1 / pivot;
+                    auto one = typeof(pivot){1};
+                    A.row(row) *= one / pivot;
                 }
                 if (column == row) {
                     break;

@@ -5,6 +5,13 @@
 #include <cassert>
 #include <cmath>
 
+    template<class T>
+    concept complex_type =
+        requires (T t) {
+            t.real();
+            t.imag();
+        };
+
 namespace linear_algebra {
     template<class T>
     constexpr bool is_vector_type = false;
@@ -28,6 +35,26 @@ namespace linear_algebra {
     concept vector_reference_type = vector<Vector> && vector_reference<VectorReference> && std::same_as<Vector, referenced_type<Vector>>;
     template<class T>
     concept vector_or_vector_reference = vector<T> || vector_reference<T>;
+
+    namespace vector_helper{
+        template<class M>
+        auto get_element() {
+            M A;
+            return A[0];
+        }
+    }
+    template<class T>
+    struct element_type_struct {
+    public:
+        using type = T;
+    };
+    template<vector Vector>
+    struct element_type_struct<Vector> {
+    public:
+        using type = std::remove_cvref_t<typeof(vector_helper::get_element<Vector>())>;
+    };
+    template<class T>
+    using element_type = element_type_struct<T>::type;
 
     // Support ranged for loop.
     template<vector_or_vector_reference Vector>
@@ -188,14 +215,29 @@ namespace linear_algebra {
         out << "]";
         return out;
     }
+
+
+    auto length_square(std::floating_point auto c) {
+        return std::norm(c);
+    }
+
+    auto length_square(complex_type auto c) {
+        return std::norm(c);
+    }
+    template<vector Vector>
+    auto length_square(const Vector& v) {
+        element_type<Vector> t{0};
+        auto len_2 = length_square(t);
+        for (auto e : v) {
+            len_2 += length_square(e);
+        }
+        return len_2;
+    }
+
     using std::sqrt;
     template<vector Vector>
     auto length(const Vector& v) {
-        std::remove_cvref_t<decltype(v[0])> len{0};
-        for (auto e : v) {
-            len += e*e;
-        }
-        return sqrt(len);
+        return sqrt(length_square(v));
     }
     template<vector Vector>
     auto normalize(Vector v) {
