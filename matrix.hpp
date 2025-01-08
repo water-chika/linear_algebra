@@ -71,7 +71,7 @@ namespace linear_algebra {
     }
     template<concept_helper::matrix Matrix, class F>
         requires std::invocable<F, typename Matrix::index_type>
-    void foreach(Matrix A, F fn) {
+    void foreach_index(Matrix& A, F fn) {
         auto [row, column] = A.size();
         iterate_from_0_to(row,
             [&A, &fn, column](auto i) {
@@ -79,6 +79,27 @@ namespace linear_algebra {
                     [&A, &fn, i](auto j) {
                         using index_t = typename Matrix::index_type;
                         fn(index_t{i, j});
+                    });
+            }
+        );
+    }
+    template<class M>
+    auto get_element() {
+        M A;
+        return A[typename M::index_type{}];
+    }
+    template<concept_helper::matrix Matrix>
+    using element_type = std::remove_cvref_t<typeof(get_element<Matrix>())>;
+    template<concept_helper::matrix Matrix, class F>
+        requires std::invocable<F, element_type<Matrix>&>
+    void foreach_element(Matrix& A, F fn) {
+        auto [row, column] = A.size();
+        iterate_from_0_to(row,
+            [&A, &fn, column](auto i) {
+                iterate_from_0_to(column,
+                    [&A, &fn, i](auto j) {
+                        using index_t = typename Matrix::index_type;
+                        fn(A[index_t{i, j}]);
                     });
             }
         );
@@ -105,8 +126,8 @@ namespace linear_algebra {
             linear_algebra::concept_helper::matrix auto&& A,
             linear_algebra::concept_helper::matrix_element auto t) {
         auto B = A;
-        foreach(B, [&B, t](auto index) {
-                B[index] /= t;
+        foreach_element(B, [t](element_type<typeof(B)>& e) {
+                e /= t;
                 });
         return B;
     }
