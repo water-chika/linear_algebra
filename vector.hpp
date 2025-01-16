@@ -205,6 +205,14 @@ namespace linear_algebra {
         }
         return res;
     }
+    template<vector Vector, class T>
+        requires vector_element_type<Vector, T>
+    Vector& operator/=(Vector& lhs, const T& rhs) {
+        for (size_t i = 0; i < lhs.size(); i++) {
+            lhs[i] /= rhs;
+        }
+        return lhs;
+    }
     std::ostream& operator<<(std::ostream& out, const vector_or_vector_reference auto& v) {
         out << "[";
         auto size = v.size();

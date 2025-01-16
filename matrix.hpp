@@ -12,11 +12,11 @@ namespace linear_algebra {
             matrix_size.get_row();
         };
         template<class Matrix_Element>
-        concept matrix_element = requires (Matrix_Element matrix_element) {
-            matrix_element* matrix_element;
-            matrix_element + matrix_element;
-            matrix_element - matrix_element;
-            matrix_element / matrix_element;
+        concept matrix_element = requires (Matrix_Element element) {
+            element * element;
+            element + element;
+            element - element;
+            element / element;
         };
         template<class Matrix_Index>
         concept matrix_index = requires (Matrix_Index matrix_index) {
@@ -91,7 +91,7 @@ namespace linear_algebra {
     template<concept_helper::matrix Matrix>
     struct element_type_struct<Matrix> {
     public:
-        using type = std::remove_cvref_t<typeof(get_element<Matrix>())>;
+        using type = std::remove_cvref_t<typeof(get_element<std::remove_cvref_t<Matrix>>())>;
     };
 
     template<concept_helper::matrix Matrix, class F>
@@ -126,9 +126,38 @@ namespace linear_algebra {
         return true;
     }
 
+    auto operator-(const concept_helper::matrix auto& A, const concept_helper::matrix auto& B) {
+        if (A.size() != B.size()) {
+            throw std::runtime_error{"not mached matrix size for operator-"};
+        }
+        auto res = A;
+        auto [row_count, column_count] = A.size();
+        for (decltype(row_count) i = 0; i < row_count; i++) {
+            for (decltype(column_count) j = 0; j < column_count; j++) {
+                res[{i,j}] -= B[{i,j}];
+            }
+        }
+        return res;
+    }
+
+    template<linear_algebra::concept_helper::matrix Matrix>
+    auto operator*(
+            Matrix&& A,
+            element_type<Matrix> t) {
+        auto B = A;
+        foreach_element(B, [t](element_type<typeof(B)>& e) {
+                e *= t;
+                });
+        return B;
+    }
+    auto operator*(
+            auto t,
+            linear_algebra::concept_helper::matrix auto&& A) {
+        return A*t;
+    }
     auto operator/(
             linear_algebra::concept_helper::matrix auto&& A,
-            linear_algebra::concept_helper::matrix_element auto t) {
+            auto t) {
         auto B = A;
         foreach_element(B, [t](element_type<typeof(B)>& e) {
                 e /= t;
@@ -255,10 +284,14 @@ namespace linear_algebra {
                     [&res, &R, i](auto j) {
                         auto base = res.column(j);
                         auto b = res.column(i);
-                        auto scale = dot_product(base, b)/dot_product(base,base);
+                        auto scale = dot_product(base, b);
                         res.column(i) -= scale*base;
                         R[{j,i}] = scale;
                     });
+                auto base = res.column(i);
+                auto len = sqrt(dot_product(base,base));
+                R[{i,i}] = len;
+                res.column(i) /= len;
             });
         return std::pair{res, R};
     }

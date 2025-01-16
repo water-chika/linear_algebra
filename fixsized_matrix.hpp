@@ -125,6 +125,16 @@ namespace linear_algebra {
 		return res;
 	}
 
+    template<class T, size_t m, size_t n>
+    auto transpose(const fixsized_matrix<T, m, n>& A) {
+        fixsized_matrix<T, n, m> A_T;
+        foreach_index(A_T,
+                [&A_T, &A](auto i) {
+                    A_T[i] = A[{i.get_column(), i.get_row()}];
+                });
+        return A_T;
+    }
+
 	template<typename T, size_t ROW, size_t COLUMN>
 	auto remove_column(const fixsized_matrix<T, ROW, COLUMN> A, size_t column) {
 		fixsized_matrix<T, ROW, COLUMN - 1> Q;
