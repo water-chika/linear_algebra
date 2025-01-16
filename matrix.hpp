@@ -246,18 +246,21 @@ namespace linear_algebra {
     }
 
     template<concept_helper::matrix Matrix>
-    Matrix gram_schmidt(Matrix&& A) {
-        Matrix res = A;
+    auto gram_schmidt(Matrix&& A) {
+        auto res = A;
+        std::remove_cvref_t<Matrix> R = I;
         iterate_from_0_to(A.size().get_column(),
-            [&res](auto i) {
+            [&res, &R](auto i) {
                 iterate_from_0_to(i,
-                    [&res, i](auto j) {
+                    [&res, &R, i](auto j) {
                         auto base = res.column(j);
                         auto b = res.column(i);
-                        res.column(i) -= dot_product(base, b)*base/(dot_product(base,base));
+                        auto scale = dot_product(base, b)/dot_product(base,base);
+                        res.column(i) -= scale*base;
+                        R[{j,i}] = scale;
                     });
             });
-        return res;
+        return std::pair{res, R};
     }
 
     template<concept_helper::matrix Matrix>

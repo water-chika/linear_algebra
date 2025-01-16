@@ -108,11 +108,12 @@ namespace linear_algebra {
 
 	template<class T, size_t m, size_t n, size_t p>
 	auto operator*(fixsized_matrix<T, m, n> lhs, fixsized_matrix<T, n, p> rhs) {
-		return fixsized_matrix<T, m, p>::create_matrix_by_get_element(
-			[&lhs, &rhs](size_t row, size_t col) {
-				return dot_product(lhs.row(row), rhs.column(col));
-			}
-		);
+        fixsized_matrix<T, m, p> res;
+        foreach_index(res,
+                [&res, &lhs, &rhs](auto index) {
+                    res[index] = dot_product(lhs.row(index.get_row()), rhs.column(index.get_column()));
+                });
+        return res;
 	}
 	template<class T, size_t m, size_t n>
 	auto operator*(const fixsized_matrix<T, m, n>& lhs, const fixsized_vector<T, n> v) {
