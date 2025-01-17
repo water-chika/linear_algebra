@@ -307,4 +307,23 @@ namespace linear_algebra {
         return res;
     }
 
+    template<concept_helper::matrix Matrix>
+    auto eigenvalues(const Matrix& A) {
+        if (A.size().get_row() != A.size().get_column()) {
+            throw std::runtime_error{"A is not squre matrix, eigenvalues only apply to squre matrix"};
+        }
+        auto A_i = A;
+        for (size_t i = 0; i < 100; i++) {
+            auto A_prev = A_i;
+            auto [Q, R] = gram_schmidt(A_i);
+            A_i = R*Q;
+
+        }
+        std::vector<element_type<Matrix>> eigenvalues(A.size().get_row());
+        for (size_t j = 0; j < eigenvalues.size(); j++) {
+            eigenvalues[j] = A_i[{j,j}];
+        }
+        return eigenvalues;
+    }
+
 }
