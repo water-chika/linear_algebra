@@ -326,4 +326,47 @@ namespace linear_algebra {
         return eigenvalues;
     }
 
+    template<concept_helper::matrix Matrix>
+    auto eigenvector_matrix_and_eigenvalue_matrix(const Matrix& A) {
+        if (A.size().get_row() != A.size().get_column()) {
+            throw std::runtime_error{"A is not squre matrix, eigenvalues only apply to squre matrix"};
+        }
+        auto A_i = A;
+        decltype(A_i) X = I;
+        for (size_t i = 0; i < 100; i++) {
+            auto A_prev = A_i;
+            auto [Q, R] = gram_schmidt(A_i);
+            A_i = R*Q;
+            X = X * Q;
+        }
+        return std::pair{X, A_i};
+    }
+
+    template<concept_helper::matrix Matrix>
+    auto singular_value_decompose(const Matrix& A) {
+        using std::sqrt;
+        auto AT_A = transpose(A) * A;
+        auto A_AT = A * transpose(A);
+        auto [X, L] = eigenvector_matrix_and_eigenvalue_matrix(AT_A);
+        auto [U_X, L_] = eigenvector_matrix_and_eigenvalue_matrix(A_AT);
+        auto V = X;
+        auto U = U_X;
+        std::vector<std::pair<element_type<decltype(L)>, size_t>> singular_values(L.size().get_column());
+        for (size_t i = 0; i < singular_values.size(); i++) {
+            auto s = sqrt(L[{i,i}]);
+            singular_values[i] = {s, i};
+        }
+        std::ranges::sort(singular_values, [](auto left, auto right) { return length_square(left.first) > length_square(right.first); });
+        decltype(L) S = I;
+        for (size_t i = 0; i < singular_values.size(); i++) {
+            auto [s, index] = singular_values[i];
+            S[{i, i}] = s;
+            V.column(i) = X.column(index);
+            U.column(i) = U_X.column(index);
+        }
+        return std::tuple{U, S, transpose(V)};
+    }
+    auto svd(const concept_helper::matrix auto& A) {
+        return singular_value_decompose(A);
+    }
 }
