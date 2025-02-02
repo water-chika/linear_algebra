@@ -289,9 +289,9 @@ namespace linear_algebra {
                         R[{j,i}] = scale;
                     });
                 auto base = res.column(i);
-                auto len = sqrt(dot_product(base,base));
+                auto len = length(base);
                 R[{i,i}] = len;
-                res.column(i) /= len;
+                if (len != 0) res.column(i) /= len;
             });
         return std::pair{res, R};
     }

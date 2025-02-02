@@ -29,6 +29,10 @@ namespace linear_algebra {
     concept vector_element_type = vector<Vector> && requires(Vector v) {
         { v[0] } -> std::convertible_to<ElementType>;
     };
+    template<class Vector, class T>
+    concept convertible_to_vector_element_type = vector<Vector> && requires(Vector v, T t) {
+        { t } -> std::convertible_to<typeof(v[0])>;
+    };
     template<class T>
     concept vector_reference = is_vector_reference_type<std::remove_cvref_t<T>> && vector<referenced_type<std::remove_cvref_t<T>>>;
     template<class Vector, class VectorReference>
@@ -197,7 +201,7 @@ namespace linear_algebra {
         return res;
     }
     template<vector Vector, class T>
-        requires vector_element_type<Vector, T>
+        requires convertible_to_vector_element_type<Vector, T>
     Vector operator/(const Vector& lhs, const T& rhs) {
         Vector res{ lhs };
         for (size_t i = 0; i < res.size(); i++) {
@@ -206,7 +210,7 @@ namespace linear_algebra {
         return res;
     }
     template<vector Vector, class T>
-        requires vector_element_type<Vector, T>
+        requires convertible_to_vector_element_type<Vector, T>
     Vector& operator/=(Vector& lhs, const T& rhs) {
         for (size_t i = 0; i < lhs.size(); i++) {
             lhs[i] /= rhs;
