@@ -150,9 +150,10 @@ namespace linear_algebra {
                 });
         return B;
     }
+    template<linear_algebra::concept_helper::matrix Matrix>
     auto operator*(
-            auto t,
-            linear_algebra::concept_helper::matrix auto&& A) {
+            element_type<Matrix> t,
+            Matrix&& A) {
         return A*t;
     }
     auto operator/(
@@ -357,12 +358,13 @@ namespace linear_algebra {
             singular_values[i] = {s, i};
         }
         std::ranges::sort(singular_values, [](auto left, auto right) { return length_square(left.first) > length_square(right.first); });
-        decltype(L) S = I;
+        Matrix S{};
         for (size_t i = 0; i < singular_values.size(); i++) {
             auto [s, index] = singular_values[i];
+            if (s == static_cast<typeof(s)>(0)) break;
             S[{i, i}] = s;
             V.column(i) = X.column(index);
-            U.column(i) = U_X.column(index);
+            U.column(i) = A*V.column(i)/s;
         }
         return std::tuple{U, S, transpose(V)};
     }
