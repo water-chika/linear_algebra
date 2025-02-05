@@ -66,4 +66,23 @@ namespace linear_algebra {
     constexpr bool is_vector_type<fixsized_vector<T, Size>> = true;
     template<class T, size_t Size>
     constexpr bool is_vector_reference_type<fixsized_pointer_vector<T, Size>> = true;
+
+    template<class T>
+    class reference_vector {
+    public:
+        reference_vector(T ref) : m_ref{ref} {}
+        size_t size() const {
+            return m_ref.size();
+        }
+        auto& operator[](size_t i) {
+            return m_ref[i];
+        }
+        const auto& operator[](size_t i) const {
+            return m_ref[i];
+        }
+    private:
+        T m_ref;
+    };
+    template<class T>
+    constexpr bool is_vector_type<reference_vector<T>> = true;
 }

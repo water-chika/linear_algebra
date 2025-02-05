@@ -30,7 +30,7 @@ namespace linear_algebra {
             m.row(i);
         };
     }
-    template<class T>
+    template<class T, class U>
     struct matrix_index {
         constexpr auto set_row(T row) {
             m_row = row;
@@ -47,7 +47,7 @@ namespace linear_algebra {
             return m_column;
         }
         T m_row;
-        T m_column;
+        U m_column;
     };
 
     template<class T, size_t size>
@@ -74,11 +74,24 @@ namespace linear_algebra {
     void foreach_index(Matrix& A, F fn) {
         auto [row, column] = A.size();
         iterate_from_0_to(row,
-            [&A, &fn, column](auto i) {
+            [&fn, column](auto i) {
                 iterate_from_0_to(column,
-                    [&A, &fn, i](auto j) {
+                    [&fn, i](auto j) {
                         using index_t = typename Matrix::index_type;
                         fn(index_t{i, j});
+                    });
+            }
+        );
+    }
+    template<concept_helper::matrix_index MatrixIndex, class F>
+        requires std::invocable<F, MatrixIndex>
+    void foreach_index(MatrixIndex size, F fn) {
+        auto [row, column] = size;
+        iterate_from_0_to(row,
+            [&fn, column](auto i) {
+                iterate_from_0_to(column,
+                    [&fn, i](auto j) {
+                        fn(MatrixIndex{i, j});
                     });
             }
         );
@@ -278,7 +291,8 @@ namespace linear_algebra {
     template<concept_helper::matrix Matrix>
     auto gram_schmidt(Matrix&& A) {
         auto res = A;
-        std::remove_cvref_t<Matrix> R = I;
+        auto R = A;
+        R = I;
         iterate_from_0_to(A.size().get_column(),
             [&res, &R](auto i) {
                 iterate_from_0_to(i,

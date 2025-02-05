@@ -5,14 +5,7 @@
 
 namespace linear_algebra {
 	
-	struct fixsized_matrix_index {
-		size_t row;
-		size_t column;
-		constexpr auto get_row() const { return row; }
-		constexpr auto get_column() const { return column; }
-		auto& set_row(size_t r) { row = r; return *this; }
-		auto& set_column(size_t c) { column = c; return *this; }
-	};
+    using fixsized_matrix_index = matrix_index<size_t,size_t>;
 
 	template<class T, size_t ROW, size_t COLUMN>
 	class fixsized_matrix {
@@ -60,10 +53,10 @@ namespace linear_algebra {
 			return res;
 		}
 		auto& operator[](fixsized_matrix_index i) {
-			return m_columns[i.column][i.row];
+			return m_columns[i.get_column()][i.get_row()];
 		}
 		const auto& operator[](fixsized_matrix_index i) const {
-			return m_columns[i.column][i.row];
+			return m_columns[i.get_column()][i.get_row()];
 		}
 		static constexpr auto size() {
 			return fixsized_matrix_index{ ROW, COLUMN };

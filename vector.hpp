@@ -43,8 +43,7 @@ namespace linear_algebra {
     namespace vector_helper{
         template<class M>
         auto get_element() {
-            M A;
-            return A[0];
+            return std::declval<M>()[0];
         }
     }
     template<class T>
