@@ -10,6 +10,7 @@ namespace linear_algebra {
 	template<class T, size_t ROW, size_t COLUMN>
 	class fixsized_matrix {
 	public:
+        using element_type = T;
 		using index_type = fixsized_matrix_index;
 
 		fixsized_matrix()

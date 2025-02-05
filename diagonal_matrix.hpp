@@ -6,6 +6,7 @@ namespace linear_algebra{
     template<class T, size_t SIZE>
     class diagonal_matrix {
     public:
+        using element_type = T;
         diagonal_matrix() = default;
         auto size() {
             return std::pair<size_t, size_t>{SIZE, SIZE};

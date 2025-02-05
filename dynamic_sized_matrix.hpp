@@ -1,22 +1,36 @@
 #pragma once
 #include <matrix.hpp>
+#include <resizeable_vector.hpp>
 
 namespace linear_algebra {
     using dynamic_sized_matrix_index = matrix_index<size_t,size_t>;
     template<class T>
     class dynamic_sized_matrix {
     public:
+        using element_type = T;
         using index_type = dynamic_sized_matrix_index;
         dynamic_sized_matrix() = default;
         dynamic_sized_matrix(dynamic_sized_matrix_index s)
             : m_size{s}, m_elements(m_size.get_column() * m_size.get_row())
         {}
+        template<matrix Matrix>
+            requires (!std::same_as<std::remove_cvref_t<Matrix>, dynamic_sized_matrix>)
+        dynamic_sized_matrix(Matrix& A)
+            : m_size{A.size()}, m_elements(m_size.get_column() * m_size.get_row())
+        {
+            foreach_index(m_size,
+                    [this, &A](auto i) {
+                        (*this)[i] = A[i];
+                    }
+                    );
+        }
         class column_ref {
         public:
+            using element_type = T;
             column_ref(dynamic_sized_matrix* m, size_t i)
                 : m_matrix{m}, m_column_index{i}
             {}
-            auto size() {
+            auto size() const {
                 auto [m, n] = m_matrix->size();
                 return m;
             }
@@ -35,10 +49,11 @@ namespace linear_algebra {
         }
         class row_ref {
         public:
+            using element_type = T;
             row_ref(dynamic_sized_matrix* m, size_t i)
                 : m_matrix{m}, m_row_index{i}
             {}
-            auto size() {
+            auto size() const {
                 auto [m, n] = m_matrix->size();
                 return n;
             }
@@ -65,7 +80,7 @@ namespace linear_algebra {
             assert(index.get_row() < m_size.get_row());
             return m_elements[index.get_column()*m_size.get_row() + index.get_row()];
         }
-        auto size() {
+        auto size() const {
             return m_size;
         }
 

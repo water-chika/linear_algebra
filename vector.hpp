@@ -25,14 +25,6 @@ namespace linear_algebra {
         t1.size();
         t1[0];
     };
-    template<class Vector, class ElementType>
-    concept vector_element_type = vector<Vector> && requires(Vector v) {
-        { v[0] } -> std::convertible_to<ElementType>;
-    };
-    template<class Vector, class T>
-    concept convertible_to_vector_element_type = vector<Vector> && requires(Vector v, T t) {
-        { t } -> std::convertible_to<typeof(v[0])>;
-    };
     template<class T>
     concept vector_reference = is_vector_reference_type<std::remove_cvref_t<T>> && vector<referenced_type<std::remove_cvref_t<T>>>;
     template<class Vector, class VectorReference>
@@ -40,24 +32,13 @@ namespace linear_algebra {
     template<class T>
     concept vector_or_vector_reference = vector<T> || vector_reference<T>;
 
-    namespace vector_helper{
-        template<class M>
-        auto get_element() {
-            return std::declval<M>()[0];
-        }
-    }
     template<class T>
     struct element_type_struct {
     public:
-        using type = T;
-    };
-    template<vector Vector>
-    struct element_type_struct<Vector> {
-    public:
-        using type = std::remove_cvref_t<typeof(vector_helper::get_element<Vector>())>;
+        using type = typename T::element_type;
     };
     template<class T>
-    using element_type = element_type_struct<T>::type;
+    using element_type = element_type_struct<std::remove_cvref_t<T>>::type;
 
     // Support ranged for loop.
     template<vector_or_vector_reference Vector>
@@ -95,7 +76,7 @@ namespace linear_algebra {
         }
     }
     template<vector Vector, class T>
-        requires vector_element_type<Vector, T>
+        requires std::same_as<element_type<Vector>, T>
     Vector operator*(const Vector& lhs, const T& rhs) {
         auto res{ lhs };
         for (auto& e : res) {
@@ -105,20 +86,27 @@ namespace linear_algebra {
         return res;
     }
     template<vector_reference VectorRef, class T>
-        requires vector_element_type<referenced_type<VectorRef>, T>
+        requires std::same_as<element_type<VectorRef>, T>
     auto operator*(const VectorRef& lhs, const T& rhs) {
         referenced_type<VectorRef> res{};
+        res = lhs;
+        assert(res.size() == lhs.size());
         foreach_index(res,
             [&res, &lhs, &rhs](auto i) {
                 res[i] = lhs[i] * rhs;
             }
         );
-        assert(res[0] == lhs[0] * rhs);
+        if (res.size() > 0) assert(res[0] == lhs[0] * rhs);
         return res;
     }
     template<vector Vector, class T>
-        requires vector_element_type<Vector, T>
+        requires std::same_as<element_type<Vector>, T>
     Vector operator*(const T& lhs, const Vector& rhs) {
+        return rhs * lhs;
+    }
+    template<vector_reference VectorRef, class T>
+        requires std::same_as<element_type<VectorRef>, T>
+    auto operator*(const T& lhs, const VectorRef& rhs) {
         return rhs * lhs;
     }
     auto&& operator*=(vector_or_vector_reference auto&& lhs, const auto& rhs) {
@@ -200,7 +188,7 @@ namespace linear_algebra {
         return res;
     }
     template<vector Vector, class T>
-        requires convertible_to_vector_element_type<Vector, T>
+        requires std::convertible_to<T, element_type<Vector>>
     Vector operator/(const Vector& lhs, const T& rhs) {
         Vector res{ lhs };
         for (size_t i = 0; i < res.size(); i++) {
@@ -209,8 +197,16 @@ namespace linear_algebra {
         return res;
     }
     template<vector Vector, class T>
-        requires convertible_to_vector_element_type<Vector, T>
+        requires std::convertible_to<T, element_type<Vector>>
     Vector& operator/=(Vector& lhs, const T& rhs) {
+        for (size_t i = 0; i < lhs.size(); i++) {
+            lhs[i] /= rhs;
+        }
+        return lhs;
+    }
+    template<vector_reference VectorRef, class T>
+        requires std::convertible_to<T, element_type<VectorRef>>
+    auto operator/=(VectorRef lhs, const T& rhs) {
         for (size_t i = 0; i < lhs.size(); i++) {
             lhs[i] /= rhs;
         }
@@ -235,7 +231,7 @@ namespace linear_algebra {
     auto length_square(complex_type auto c) {
         return std::norm(c);
     }
-    template<vector Vector>
+    template<vector_or_vector_reference Vector>
     auto length_square(const Vector& v) {
         element_type<Vector> t{0};
         auto len_2 = length_square(t);
@@ -246,15 +242,15 @@ namespace linear_algebra {
     }
 
     using std::sqrt;
-    template<vector Vector>
+    template<vector_or_vector_reference Vector>
     auto length(const Vector& v) {
         return sqrt(length_square(v));
     }
-    template<vector Vector>
+    template<vector_or_vector_reference Vector>
     auto normalize(Vector v) {
         return v / length(v);
     }
-    template<vector Vector>
+    template<vector_or_vector_reference Vector>
     auto construct_orthonormal_vectors(std::vector<Vector> vectors) {
         std::vector<Vector> orthonormal_vectors{};
         for (auto v : vectors) {
@@ -269,7 +265,7 @@ namespace linear_algebra {
         }
         return orthonormal_vectors;
     }
-    template<vector Vector>
+    template<vector_or_vector_reference Vector>
     auto gram_schmidt(std::vector<Vector> vectors) {
         std::vector<Vector> orthonormal_vectors{};
         for (auto v : vectors) {

@@ -30,6 +30,12 @@ namespace linear_algebra {
             m.row(i);
         };
     }
+    template <class Matrix>
+    concept matrix = requires (Matrix m, int i) {
+        m.size();
+        m.column(i);
+        m.row(i);
+    };
     template<class T, class U>
     struct matrix_index {
         constexpr auto set_row(T row) {
@@ -96,16 +102,6 @@ namespace linear_algebra {
             }
         );
     }
-    template<class M>
-    auto get_element() {
-        M A;
-        return A[typename M::index_type{}];
-    }
-    template<concept_helper::matrix Matrix>
-    struct element_type_struct<Matrix> {
-    public:
-        using type = std::remove_cvref_t<typeof(get_element<std::remove_cvref_t<Matrix>>())>;
-    };
 
     template<concept_helper::matrix Matrix, class F>
         requires std::invocable<F, element_type<Matrix>&>

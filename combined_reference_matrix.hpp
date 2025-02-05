@@ -7,6 +7,7 @@ namespace linear_algebra{
     struct row_type {
         T& A;
         size_t row;
+        using element_type = typename T::element_type;
         using referenced_type = Vector;
         size_t size() const {
             return A.size().get_column();
@@ -24,6 +25,7 @@ namespace linear_algebra{
     template<concept_helper::matrix M1, concept_helper::matrix M2>
     class combined_reference_matrix {
     public:
+        using element_type = typename M1::element_type;
         using index_type = typename M1::index_type;
         using left_matrix_type = M1;
         using right_matrix_type = M2;

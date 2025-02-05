@@ -6,8 +6,17 @@ namespace linear_algebra {
     template<class T, size_t Size>
     class fixsized_vector {
     public:
+        using element_type = T;
         fixsized_vector() : m_data{} {}
         fixsized_vector(std::initializer_list<T> data) : m_data{ array_from_initializer_list(data) } {}
+        template<vector_or_vector_reference Vector>
+        fixsized_vector(Vector v) : m_data{}
+        {
+            assert(v.size() == Size);
+            for (size_t i = 0; i < Size; i++) {
+                m_data[i] = v[i];
+            }
+        }
         size_t size() const {
             return Size;
         }
@@ -29,6 +38,7 @@ namespace linear_algebra {
     template<class T, size_t Size>
     class fixsized_pointer_vector {
     public:
+        using element_type = T;
         using referenced_type = fixsized_vector<T, Size>;
         fixsized_pointer_vector() : m_data{} {}
         fixsized_pointer_vector(std::initializer_list<T*> data) : m_data{ array_from_initializer_list(data) } {}
@@ -67,22 +77,4 @@ namespace linear_algebra {
     template<class T, size_t Size>
     constexpr bool is_vector_reference_type<fixsized_pointer_vector<T, Size>> = true;
 
-    template<class T>
-    class reference_vector {
-    public:
-        reference_vector(T ref) : m_ref{ref} {}
-        size_t size() const {
-            return m_ref.size();
-        }
-        auto& operator[](size_t i) {
-            return m_ref[i];
-        }
-        const auto& operator[](size_t i) const {
-            return m_ref[i];
-        }
-    private:
-        T m_ref;
-    };
-    template<class T>
-    constexpr bool is_vector_type<reference_vector<T>> = true;
 }

@@ -5,6 +5,7 @@ namespace linear_algebra {
     template<vector V1, vector V2>
     class combined_reference_vector {
     public:
+        using elment_type = typename V1::element_type;
         combined_reference_vector(
                 V1& left, V2& right)
             : left_half{left}, right_half{right}
