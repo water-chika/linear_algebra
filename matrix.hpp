@@ -284,10 +284,26 @@ namespace linear_algebra {
         return columns;
     }
 
+    template<class T>
+    constexpr bool is_approximate_number = std::floating_point<T>;
+    template<class T>
+    constexpr bool is_approximate_number<std::complex<T>> = std::floating_point<T>;
+    template<class T>
+    constexpr bool is_exact_number = std::integral<T>;
+    template<class T>
+    constexpr T accuracy = 1;
+    template<>
+    constexpr double accuracy<double> = 0.00000001;
+    template<>
+    constexpr float accuracy<float> = 0.000001f;
+    template<class T>
+    constexpr T accuracy<std::complex<T>> = accuracy<T>;
+
     template<concept_helper::matrix Matrix>
     auto gram_schmidt(Matrix&& A) {
         auto res = A;
         auto R = A;
+        using element_t = element_type<Matrix>;
         R = I;
         iterate_from_0_to(A.size().get_column(),
             [&res, &R](auto i) {
@@ -301,8 +317,22 @@ namespace linear_algebra {
                     });
                 auto base = res.column(i);
                 auto len = length(base);
+                if (is_approximate_number<element_t>) {
+                    if (len <= i*100*accuracy<element_t>) {
+                        len = 0;
+                        res.column(i) *= 0;
+                    }
+                    else {
+                        res.column(i) /= len;
+                    }
+                }
+                else if (is_exact_number<element_t>) {
+                    if (len != 0) res.column(i) /= len;
+                }
+                else {
+                    assert(0);
+                }
                 R[{i,i}] = len;
-                if (len != 0) res.column(i) /= len;
             });
         return std::pair{res, R};
     }
