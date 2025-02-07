@@ -397,7 +397,7 @@ namespace linear_algebra {
         auto [X, L] = eigenvector_matrix_and_eigenvalue_matrix(AT_A);
         auto [U_X, L_] = eigenvector_matrix_and_eigenvalue_matrix(A_AT);
         typeof(X) V{};
-        auto U = U_X;
+        typeof(U_X) U{};
         std::vector<std::pair<element_type<decltype(L)>, size_t>> singular_values(L.size().get_column());
         for (size_t i = 0; i < singular_values.size(); i++) {
             auto s = sqrt(L[{i,i}]);
