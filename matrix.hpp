@@ -174,6 +174,12 @@ namespace linear_algebra {
                 });
         return B;
     }
+    auto& operator/=(
+            linear_algebra::concept_helper::matrix auto&& A,
+            auto t) {
+        A = A / t;
+        return A;
+    }
 
     auto& operator<<(std::ostream& out, linear_algebra::concept_helper::matrix auto&& A) {
         out << "{" << std::endl;
@@ -390,7 +396,7 @@ namespace linear_algebra {
         auto A_AT = A * transpose(A);
         auto [X, L] = eigenvector_matrix_and_eigenvalue_matrix(AT_A);
         auto [U_X, L_] = eigenvector_matrix_and_eigenvalue_matrix(A_AT);
-        auto V = X;
+        typeof(X) V{};
         auto U = U_X;
         std::vector<std::pair<element_type<decltype(L)>, size_t>> singular_values(L.size().get_column());
         for (size_t i = 0; i < singular_values.size(); i++) {
