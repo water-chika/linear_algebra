@@ -1,7 +1,7 @@
 #pragma once
 
 #include <algorithm>
-#include <fixsized_vector.hpp>
+#include <vector/fixsized_vector.hpp>
 
 namespace linear_algebra {
 	

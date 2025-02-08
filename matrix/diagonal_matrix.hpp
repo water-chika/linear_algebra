@@ -1,6 +1,6 @@
 #pragma once
 
-#include <matrix.hpp>
+#include <matrix/matrix.hpp>
 
 namespace linear_algebra{
     template<class T, size_t SIZE>

@@ -1,6 +1,6 @@
 #pragma once
-#include <matrix.hpp>
-#include <combined_reference_vector.hpp>
+#include <matrix/matrix.hpp>
+#include <vector/combined_reference_vector.hpp>
 
 namespace linear_algebra{
     template<class T, class Vector>

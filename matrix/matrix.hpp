@@ -1,6 +1,6 @@
 #pragma once
-#include "vector.hpp"
-#include "fixsized_vector.hpp"
+#include "vector/vector.hpp"
+#include "vector/fixsized_vector.hpp"
 #include <algorithm>
 #include <iomanip>
 
