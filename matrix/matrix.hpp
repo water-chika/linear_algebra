@@ -52,6 +52,18 @@ namespace linear_algebra {
         constexpr auto get_column() const {
             return m_column;
         }
+
+        matrix_index() = default;
+
+        matrix_index(T r, U c) 
+        : m_row{r}, m_column{c}
+        {}
+
+        template<class T_, class U_>
+        matrix_index(matrix_index<T_,U_> i) 
+        : m_row{i.m_row}, m_column{i.m_column}
+        {}
+
         T m_row;
         U m_column;
     };

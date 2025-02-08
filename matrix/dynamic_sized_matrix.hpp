@@ -1,6 +1,6 @@
 #pragma once
-#include <matrix.hpp>
-#include <resizeable_vector.hpp>
+#include <matrix/matrix.hpp>
+#include <vector/resizeable_vector.hpp>
 
 namespace linear_algebra {
     using dynamic_sized_matrix_index = matrix_index<size_t,size_t>;
@@ -10,7 +10,8 @@ namespace linear_algebra {
         using element_type = T;
         using index_type = dynamic_sized_matrix_index;
         dynamic_sized_matrix() = default;
-        dynamic_sized_matrix(dynamic_sized_matrix_index s)
+        template<class C, class R>
+        dynamic_sized_matrix(matrix_index<C,R> s)
             : m_size{s}, m_elements(m_size.get_column() * m_size.get_row())
         {}
         template<matrix Matrix>
