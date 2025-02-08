@@ -97,10 +97,5 @@ namespace linear_algebra{
         typename Matrix::left_matrix_type;
         typename Matrix::right_matrix_type;
     };
-    template<is_combined_reference_matrix_type Matrix>
-    class element_type_struct<Matrix> {
-    public:
-        using type = typename Matrix::left_matrix_type;
-    };
 }
 
