@@ -10,8 +10,7 @@ namespace linear_algebra {
         using element_type = T;
         using index_type = dynamic_sized_matrix_index;
         dynamic_sized_matrix() = default;
-        template<class C, class R>
-        dynamic_sized_matrix(matrix_index<C,R> s)
+        dynamic_sized_matrix(index_type s)
             : m_size{s}, m_elements(m_size.get_column() * m_size.get_row())
         {}
         template<matrix Matrix>
@@ -83,6 +82,10 @@ namespace linear_algebra {
         }
         auto size() const {
             return m_size;
+        }
+        auto resize(index_type s) {
+            m_size = s;
+            m_elements.resize(s.get_row()*s.get_column());
         }
 
         auto& operator=(concept_helper::matrix auto&& A) {
