@@ -33,6 +33,11 @@ namespace linear_algebra {
     concept vector_or_vector_reference = vector<T> || vector_reference<T>;
 
     template<class T>
+    concept with_element_type = requires(T t) {
+        typename T::element_type;
+    };
+
+    template<with_element_type T>
     struct element_type_struct {
     public:
         using type = typename T::element_type;

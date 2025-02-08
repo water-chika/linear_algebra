@@ -154,7 +154,7 @@ namespace linear_algebra {
             Matrix&& A,
             element_type<Matrix> t) {
         auto B = A;
-        foreach_element(B, [t](element_type<typeof(B)>& e) {
+        foreach_element(B, [t](element_type<decltype(B)>& e) {
                 e *= t;
                 });
         return B;
@@ -169,7 +169,7 @@ namespace linear_algebra {
             linear_algebra::concept_helper::matrix auto&& A,
             auto t) {
         auto B = A;
-        foreach_element(B, [t](element_type<typeof(B)>& e) {
+        foreach_element(B, [t](element_type<decltype(B)>& e) {
                 e /= t;
                 });
         return B;
@@ -209,7 +209,7 @@ namespace linear_algebra {
         auto column = index.get_column();
         auto row = index.get_row();
         auto pivot = A[{column, column}];
-        if (pivot == static_cast<typeof(pivot)>(0)) {
+        if (pivot == static_cast<decltype(pivot)>(0)) {
             throw std::runtime_error{ "matrix is not invertible" };
         }
         auto multier = A[index] / pivot;
@@ -223,7 +223,7 @@ namespace linear_algebra {
         for_index_range(0, std::min(row_count, column_count),
             [&A](auto column) {
                 auto pivot = A[{column, column}];
-                auto zero = static_cast<typeof(pivot)>(0);
+                auto zero = static_cast<decltype(pivot)>(0);
                 if (pivot == zero) {
                     for (decltype(column) row = column + 1; row < A.size().get_row(); row++) {
                         if (A[{row, column}] != zero) {
@@ -257,11 +257,11 @@ namespace linear_algebra {
                 }
                 else {
                     auto pivot = A[std::remove_cvref_t<decltype(A.size())>{}.set_row(row).set_column(row)];
-                    auto zero = typeof(pivot){0};
+                    auto zero = decltype(pivot){0};
                     if (pivot == zero) {
                         throw std::runtime_error{ "matrix is not invertible" };
                     }
-                    auto one = typeof(pivot){1};
+                    auto one = decltype(pivot){1};
                     A.row(row) *= one / pivot;
                 }
                 if (column == row) {
@@ -396,8 +396,8 @@ namespace linear_algebra {
         auto A_AT = A * transpose(A);
         auto [X, L] = eigenvector_matrix_and_eigenvalue_matrix(AT_A);
         auto [U_X, L_] = eigenvector_matrix_and_eigenvalue_matrix(A_AT);
-        typeof(X) V{};
-        typeof(U_X) U{};
+        decltype(X) V{};
+        decltype(U_X) U{};
         std::vector<std::pair<element_type<decltype(L)>, size_t>> singular_values(L.size().get_column());
         for (size_t i = 0; i < singular_values.size(); i++) {
             auto s = sqrt(L[{i,i}]);
@@ -407,7 +407,7 @@ namespace linear_algebra {
         Matrix S{};
         for (size_t i = 0; i < singular_values.size(); i++) {
             auto [s, index] = singular_values[i];
-            if (s == static_cast<typeof(s)>(0)) break;
+            if (s == static_cast<decltype(s)>(0)) break;
             S[{i, i}] = s;
             V.column(i) = X.column(index);
             U.column(i) = A*V.column(i)/s;
