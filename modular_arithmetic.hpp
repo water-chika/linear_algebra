@@ -8,8 +8,8 @@
 #include<source_location>
 
 namespace linear_algebra{
-    constexpr bool debug_modular_arithmetic =
-        true;
+    constexpr auto debug_modular_arithmetic = false;
+
     constexpr bool is_prime(auto n) {
         using std::gcd;
         for (decltype(n) i = 2; i*i < n; i++) {
@@ -236,7 +236,7 @@ namespace linear_algebra{
         using type = decltype((t*m+1)/t);
     };
 
-    constexpr auto debug_modular_arithmetic_inverse = true;
+    constexpr auto debug_modular_arithmetic_inverse = false;
     template<class T, class M>
     auto inverse(modular_arithmetic<prime_number<T>, prime_number<M>> v)
         ->
