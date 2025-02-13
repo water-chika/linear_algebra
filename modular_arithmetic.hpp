@@ -7,7 +7,7 @@
 #include <vector>
 #include<source_location>
 
-namespace linear_algebra{
+namespace modular_arithmetic {
     constexpr auto debug_modular_arithmetic = false;
 
     constexpr bool is_prime(auto n) {
@@ -41,7 +41,6 @@ namespace linear_algebra{
         auto value() const {
             return m_value;
         }
-        bool operator==(const prime_number& rhs) const = default;
     private:
         T m_value;
     };
@@ -94,17 +93,17 @@ namespace linear_algebra{
     auto operator/(const prime_number<T>& lhs, const prime_number<U>& rhs) {
         return static_cast<T>(lhs) / static_cast<U>(rhs);
     }
+    template<class T,class U>
+    auto operator%(const prime_number<T>& lhs, const prime_number<U>& rhs) {
+        return static_cast<T>(lhs) % static_cast<U>(rhs);
+    }
     template<class T>
     auto operator%(const auto& lhs, const prime_number<T>& rhs) {
         return lhs % static_cast<T>(rhs);
     }
     template<class T>
     auto operator%(const prime_number<T>& lhs, const auto& rhs) {
-        return lhs % static_cast<T>(rhs);
-    }
-    template<class T,class U>
-    auto operator%(const prime_number<T>& lhs, const prime_number<U>& rhs) {
-        return static_cast<T>(lhs) % static_cast<U>(rhs);
+        return lhs.value() % rhs;
     }
     template<class T>
     auto operator<=>(const auto& lhs, const prime_number<T>& rhs) {
@@ -149,85 +148,6 @@ namespace linear_algebra{
         }
         return r;
     }
-    template<class T, class M>
-    class modular_arithmetic {
-    public:
-        constexpr modular_arithmetic(T v, M m) : m_value{v}, m_mod{m}{
-            if (debug_modular_arithmetic) assert(m_value >= 0 && m_value < m_mod);
-        }
-        explicit constexpr operator T() const {
-            return m_value;
-        }
-        constexpr auto value() const {
-            return m_value;
-        }
-        constexpr auto modular_value() const {
-            return m_mod;
-        }
-        constexpr bool operator==(const modular_arithmetic& rhs) const = default;
-    private:
-        T m_value;
-        M m_mod;
-    };
-
-    template<class T, class M>
-    auto make_modular_arithmetic(T v, M m) {
-        return modular_arithmetic{mod(v,m), m};
-    }
-
-    template<class T, class M>
-    std::ostream& operator<<(std::ostream& out, modular_arithmetic<T, M> v) {
-        return out << static_cast<T>(v) << "(mod " << v.modular_value() << ")";
-    }
-
-    template<class T1, class M1, class T2, class M2>
-    auto modular_value(modular_arithmetic<T1, M1> lhs, modular_arithmetic<T2, M2> rhs) {
-        if (debug_modular_arithmetic) assert(lhs.modular_value() == rhs.modular_value());
-        return lhs.modular_value();
-    }
-    template<class T1, class M1, class T2, class M2>
-    auto binary_op(const modular_arithmetic<T1, M1>& lhs, const modular_arithmetic<T2, M2>& rhs,
-            auto&& op) {
-        auto m = modular_value(lhs, rhs);
-        return make_modular_arithmetic(
-                mod(op(lhs.value(), rhs.value()), m),
-                m
-        );
-    }
-    template<class T, class M>
-    auto operator+(const modular_arithmetic<T,M> lhs, const modular_arithmetic<T,M> rhs) {
-        return binary_op(lhs, rhs,
-                [](auto lhs, auto rhs) {
-                    return lhs + rhs;
-                }
-                );
-    }
-    template<class T, class M>
-    auto& operator+=(modular_arithmetic<T,M>& lhs, const modular_arithmetic<T,M>& rhs) {
-        lhs = lhs + rhs;
-        return lhs;
-    }
-    template<class T, class M>
-    auto operator-(modular_arithmetic<T,M> lhs, modular_arithmetic<T,M> rhs) {
-        return binary_op(lhs, rhs,
-                [m=rhs.modular_value()](auto lhs, auto rhs) {
-                    return lhs + m - rhs;
-                }
-                );
-    }
-    template<class T1, class M1, class T2, class M2>
-    auto operator*(const modular_arithmetic<T1,M1>& lhs, const modular_arithmetic<T2,M2>& rhs) {
-        return binary_op(lhs, rhs,
-                [](auto lhs, auto rhs) {
-                    return lhs * rhs;
-                }
-                );
-    }
-    template<class T, class M>
-    auto& operator*=(modular_arithmetic<T,M>& lhs, modular_arithmetic<T,M> rhs) {
-        lhs = lhs * rhs;
-        return lhs;
-    }
 
     template<class T, class M>
     struct inverse_return_type {
@@ -236,49 +156,35 @@ namespace linear_algebra{
         using type = decltype((t*m+1)/t);
     };
 
-    constexpr auto debug_modular_arithmetic_inverse = false;
-    template<class T, class M>
-    auto inverse(modular_arithmetic<prime_number<T>, prime_number<M>> v)
-        ->
-        modular_arithmetic<typename inverse_return_type<T,M>::type, prime_number<M>> {
-        if (debug_modular_arithmetic_inverse) {
-            std::cout << "inverse(" << v << ")" << std::endl;
-            std::cout << std::source_location::current().function_name() << std::endl;
+    template<
+        typename Value,
+        typename Mod,
+        typename Res = inverse_return_type<Value, Mod>::type
+        >
+    Res&& inverse(Value value, Mod m, Res&& res = Res{}) {
+        if (value == 1 || m == 1) {
+            res = 1;
         }
-        auto mod_v = v.modular_value();
-        auto p = static_cast<prime_number<T>>(v);
-        auto m_p = make_modular_arithmetic(mod_v, p);
-        auto n = inverse(m_p).value();
-        auto res = modular_arithmetic{(n*mod_v+1)/p, mod_v};
-        if (debug_modular_arithmetic_inverse) {
-            assert((res * v).value() == 1);
+        else if (value == 0) {
+            throw std::runtime_error{"0 does not have inverse"};
         }
-        return res;
+        else {
+            auto n = inverse(mod(m, value), value);
+            res = (n*m+1) / value;
+        }
+        return std::forward<Res>(res);
     }
-    template<class T, class M>
-    auto inverse(modular_arithmetic<T, prime_number<M>> v) {
-        auto primes = factor_primes(static_cast<T>(v));
-        if (debug_modular_arithmetic_inverse) {
-            std::cout << "inverse(" << v << ")" << std::endl;
-            std::cout << "primes: ";
-            for (auto prime : primes) {
-                std::cout << prime << ", ";
-            }
-            std::cout << std::endl;
-        }
-        auto mod_v = v.modular_value();
-        auto res = modular_arithmetic<T, prime_number<M>>{1, mod_v};
+    template<
+        typename Lhs,
+        typename Rhs,
+        typename Res = Lhs,
+        typename Mod = Lhs>
+    auto&& divides(Lhs lhs, Rhs rhs, Mod m, Res&& res = Res{}) {
+        auto primes = factor_primes(rhs);
+        res = lhs;
         for (auto prime : primes) {
-            res *= inverse(modular_arithmetic<prime_number<T>, prime_number<M>>{prime, mod_v});
+            res *= inverse(prime, m);
         }
-        return res;
-    }
-    template<class T, class M>
-    auto operator/(modular_arithmetic<T,prime_number<M>> lhs, modular_arithmetic<T,prime_number<M>> rhs) {
-        auto res = lhs*inverse(rhs);
-        if (debug_modular_arithmetic) {
-            assert(res * rhs == lhs);
-        }
-        return res;
+        return std::forward<Res>(res);
     }
 }

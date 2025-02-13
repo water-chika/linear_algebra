@@ -147,6 +147,54 @@ namespace linear_algebra {
         return true;
     }
 
+    constexpr auto debug_matrix = false;
+
+    template<concept_helper::matrix MatrixLhs,
+        concept_helper::matrix MatrixRhs,
+        concept_helper::matrix MatrixRes,
+        class ElementOp>
+    auto element_op(const MatrixLhs& lhs, const MatrixRhs& rhs, ElementOp&& element_op) {
+        if (debug_matrix) {
+            assert(lhs.size() == rhs.size());
+        }
+        MatrixRes res{};
+        foreach_index(res,
+                [&res, &lhs, &rhs, &element_op](auto i) {
+                    res[i] = element_op(lhs[i],rhs[i]);
+                }
+                );
+        return res;
+    }
+
+    template<concept_helper::matrix MatrixLhs,
+        concept_helper::matrix MatrixRhs,
+        concept_helper::matrix MatrixRes = MatrixLhs,
+        class ElementAdd = std::plus<void>>
+    auto add(const MatrixLhs& lhs, const MatrixRhs& rhs, ElementAdd&& element_add) {
+        return element_op(lhs, rhs, element_add);
+    }
+    template<concept_helper::matrix MatrixLhs,
+        concept_helper::matrix MatrixRhs,
+        concept_helper::matrix MatrixRes = MatrixLhs,
+        class ElementSubtract = std::minus<void>>
+    auto subtract(const MatrixLhs& lhs, const MatrixRhs& rhs, ElementSubtract&& element_sub) {
+        return element_op(lhs, rhs, element_sub);
+    }
+    template<concept_helper::matrix MatrixLhs,
+        concept_helper::matrix MatrixRhs,
+        concept_helper::matrix MatrixRes = MatrixLhs,
+        class ElementMultiplies = std::multiplies<void>>
+    auto multiplies(const MatrixLhs& lhs, const MatrixRhs& rhs, ElementMultiplies&& element_mul) {
+        return element_op(lhs, rhs, element_mul);
+    }
+    template<concept_helper::matrix MatrixLhs,
+        concept_helper::matrix MatrixRhs,
+        concept_helper::matrix MatrixRes = MatrixLhs,
+        class ElementDivides = std::divides<void>>
+    auto divides(const MatrixLhs& lhs, const MatrixRhs& rhs, ElementDivides&& element_div) {
+        return element_op(lhs, rhs, element_div);
+    }
+
     auto operator-(const concept_helper::matrix auto& A, const concept_helper::matrix auto& B) {
         if (A.size() != B.size()) {
             throw std::runtime_error{"not mached matrix size for operator-"};
