@@ -265,37 +265,47 @@ namespace linear_algebra {
         }
     }
 
-    auto& do_eliminate(concept_helper::matrix auto& A, concept_helper::matrix_index auto&& index) {
-        auto column = index.get_column();
-        auto row = index.get_row();
-        auto pivot = A[{column, column}];
-        if (pivot == static_cast<decltype(pivot)>(0)) {
-            throw std::runtime_error{ "matrix is not invertible" };
+    class inverse{
+    public:
+        auto operator()(auto v) {
+            return 1/v;
         }
-        auto multier = A[index] / pivot;
-        A.row(row) -= A.row(column)*multier;
-        return A;
-    }
+    };
+    class is_invertible{
+    public:
+        auto operator()(auto v) {
+            return v != decltype(v){0};
+        }
+    };
 
-    template<concept_helper::matrix Matrix>
-    auto& do_eliminate(Matrix& A) {
+    template<concept_helper::matrix Matrix,
+        typename Element_multiplies = std::multiplies<void>,
+        typename Element_divides = std::divides<void>,
+        typename Element_inverse = inverse,
+        typename Element_is_invertible = is_invertible>
+    auto& do_eliminate(Matrix& A,
+            Element_multiplies element_multiplies = std::multiplies<void>{},
+            Element_divides element_divides = std::divides<void>{},
+            Element_inverse element_inverse = inverse{},
+            Element_is_invertible element_is_invertible = is_invertible{}
+            ) {
         auto [row_count, column_count] = A.size();
         for_index_range(0, std::min(row_count, column_count),
-            [&A](auto column) {
-                auto pivot = A[{column, column}];
-                auto zero = static_cast<decltype(pivot)>(0);
-                if (pivot == zero) {
+            [&A, &element_multiplies, &element_divides, &element_inverse, &element_is_invertible](auto column) {
+                if (!element_is_invertible(A[{column, column}])) {
                     for (decltype(column) row = column + 1; row < A.size().get_row(); row++) {
-                        if (A[{row, column}] != zero) {
+                        if (element_is_invertible(A[{row, column}])) {
                             swap(A.row(column), A.row(row));
                             break;
                         }
                     }
                 }
-                if (A[{column, column}] != zero) {
+                if (element_is_invertible(A[{column, column}])) {
                     for_index_range(column + 1, A.size().get_row(),
-                        [&A, column](auto row) {
-                            do_eliminate(A, typename Matrix::index_type{ row, column });
+                        [&A, &element_multiplies, &element_divides, column](auto row) {
+                            auto pivot = A[{column, column}];
+                            auto multier = element_divides(A[{row, column}] , pivot);
+                            A.row(row) -= multiplies(A.row(column), multier, {}, element_multiplies);
                         });
                 }
             }

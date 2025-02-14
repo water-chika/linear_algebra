@@ -80,29 +80,43 @@ namespace linear_algebra {
             ++i;
         }
     }
+
+    template<vector_or_vector_reference Vec>
+    struct target_type_struct {
+        using type = Vec;
+    };
+    template<vector_reference VecRef>
+    struct target_type_struct<VecRef> {
+        using type = referenced_type<VecRef>;
+    };
+
+    template<vector_or_vector_reference Vec>
+    using target_type = typename target_type_struct<Vec>::type;
+
+    template<
+        vector_or_vector_reference Lhs,
+        typename Res = target_type<Lhs>,
+        typename Element_mul = std::multiplies<void>
+            >
+    auto multiplies(const Lhs& lhs, const element_type<Lhs>& rhs,
+            Res&& res = Res{}, Element_mul&& element_mul = std::multiplies<void>{}) {
+        res = lhs;
+        foreach_index(res,
+                [&res, &lhs, &rhs, &element_mul](auto i) {
+                    res[i] = element_mul(lhs[i] , rhs);
+                }
+                );
+        return res;
+    }
     template<vector Vector, class T>
         requires std::same_as<element_type<Vector>, T>
     Vector operator*(const Vector& lhs, const T& rhs) {
-        auto res{ lhs };
-        for (auto& e : res) {
-            e *= rhs;
-        }
-        assert(res[0] == lhs[0] * rhs);
-        return res;
+        return multiplies(lhs, rhs);
     }
     template<vector_reference VectorRef, class T>
         requires std::same_as<element_type<VectorRef>, T>
     auto operator*(const VectorRef& lhs, const T& rhs) {
-        referenced_type<VectorRef> res{};
-        res = lhs;
-        assert(res.size() == lhs.size());
-        foreach_index(res,
-            [&res, &lhs, &rhs](auto i) {
-                res[i] = lhs[i] * rhs;
-            }
-        );
-        if (res.size() > 0) assert(res[0] == lhs[0] * rhs);
-        return res;
+        return multiplies(lhs, rhs, referenced_type<VectorRef>{});
     }
     template<vector Vector, class T>
         requires std::same_as<element_type<Vector>, T>
