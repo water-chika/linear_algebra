@@ -108,6 +108,22 @@ namespace linear_algebra {
                 );
         return res;
     }
+    template<
+        vector_or_vector_reference Lhs,
+        vector_or_vector_reference Rhs,
+        typename Res = target_type<Lhs>,
+        typename Element_sub = std::minus<void>
+            >
+    auto subtract(const Lhs& lhs, const Rhs& rhs,
+            Res&& res = Res{}, Element_sub&& element_sub = std::minus<void>{}) {
+        res = lhs;
+        foreach_index(res,
+                [&res, &lhs, &rhs, &element_sub](auto i) {
+                    res[i] = element_sub(lhs[i] , rhs[i]);
+                }
+                );
+        return res;
+    }
     template<vector Vector, class T>
         requires std::same_as<element_type<Vector>, T>
     Vector operator*(const Vector& lhs, const T& rhs) {

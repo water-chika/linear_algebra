@@ -22,6 +22,11 @@ namespace modular_arithmetic {
         return r;
     }
 
+    auto is_invertible(auto v, auto m) {
+        using std::gcd;
+        return gcd(v, m) == 1;
+    }
+
     template<class T, class M>
     struct inverse_return_type {
         T t;

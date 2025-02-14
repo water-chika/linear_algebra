@@ -278,35 +278,64 @@ namespace linear_algebra {
         }
     };
 
+    constexpr auto debug_matrix_eliminate = false;
+
     template<concept_helper::matrix Matrix,
+        typename Element_subtract = std::minus<void>,
         typename Element_multiplies = std::multiplies<void>,
         typename Element_divides = std::divides<void>,
         typename Element_inverse = inverse,
         typename Element_is_invertible = is_invertible>
     auto& do_eliminate(Matrix& A,
+            Element_subtract element_subtract = std::minus<void>{},
             Element_multiplies element_multiplies = std::multiplies<void>{},
             Element_divides element_divides = std::divides<void>{},
             Element_inverse element_inverse = inverse{},
             Element_is_invertible element_is_invertible = is_invertible{}
             ) {
+        if (debug_matrix_eliminate) {
+            std::cout << A << std::endl;
+        }
         auto [row_count, column_count] = A.size();
         for_index_range(0, std::min(row_count, column_count),
-            [&A, &element_multiplies, &element_divides, &element_inverse, &element_is_invertible](auto column) {
+            [&A,
+             &element_subtract,
+             &element_multiplies,
+             &element_divides,
+             &element_inverse,
+             &element_is_invertible](auto column) {
                 if (!element_is_invertible(A[{column, column}])) {
                     for (decltype(column) row = column + 1; row < A.size().get_row(); row++) {
                         if (element_is_invertible(A[{row, column}])) {
                             swap(A.row(column), A.row(row));
+                            if (debug_matrix_eliminate) {
+                                std::cout << "swap rows: " << column << ", " << row << std::endl;
+                                std::cout << A << std::endl;
+                            }
                             break;
                         }
                     }
                 }
                 if (element_is_invertible(A[{column, column}])) {
                     for_index_range(column + 1, A.size().get_row(),
-                        [&A, &element_multiplies, &element_divides, column](auto row) {
+                        [&A, &element_subtract, &element_multiplies, &element_divides, column](auto row) {
                             auto pivot = A[{column, column}];
                             auto multier = element_divides(A[{row, column}] , pivot);
-                            A.row(row) -= multiplies(A.row(column), multier, {}, element_multiplies);
+                            A.row(row) = 
+                                subtract(
+                                    A.row(row),
+                                    multiplies(A.row(column), multier, {}, element_multiplies),
+                                    {},
+                                    element_subtract
+                                );
+                            if (debug_matrix_eliminate) {
+                                std::cout << "row " << row << " subtract row " << column << " * " << multier << std::endl;
+                                std::cout << A << std::endl;
+                            }
                         });
+                }
+                if (debug_matrix_eliminate) {
+                    std::cout << A << std::endl;
                 }
             }
         );

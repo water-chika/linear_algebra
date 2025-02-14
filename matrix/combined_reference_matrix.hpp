@@ -18,6 +18,15 @@ namespace linear_algebra{
         auto operator[](size_t i) const {
             return A[A.size().set_column(i).set_row(row)];
         }
+
+        auto& operator=(const vector_or_vector_reference auto& rhs) {
+            foreach_index(*this,
+                    [this, &rhs](auto i) {
+                        this->operator[](i) = rhs[i];
+                    }
+                    );
+            return *this;
+        }
     };
     template<class T, class U>
     constexpr bool is_vector_reference_type<row_type<T,U>> = true;
@@ -86,10 +95,30 @@ namespace linear_algebra{
         M2& right_half;
     };
 
-    auto inverse(concept_helper::matrix auto A) {
+    template<
+        typename Element_subtract = std::minus<void>,
+        typename Element_multiplies = std::multiplies<void>,
+        typename Element_divides = std::divides<void>,
+        typename Element_inverse = inverse,
+        typename Element_is_invertible = is_invertible>
+    auto inverse(concept_helper::matrix auto A,
+            Element_subtract element_subtract = std::minus<void>{},
+            Element_multiplies element_multiplies = std::multiplies<void>{},
+            Element_divides element_divides = std::divides<void>{},
+            Element_inverse element_inverse = inverse{},
+            Element_is_invertible element_is_invertible = is_invertible{}
+            ) {
         std::remove_cvref_t<decltype(A)> res = I;
         auto A_I = combined_reference_matrix{A, res};
-        do_back_substitution(do_eliminate(A_I));
+        do_back_substitution(
+                do_eliminate(A_I,
+                    element_subtract,
+                    element_multiplies,
+                    element_divides,
+                    element_inverse,
+                    element_is_invertible
+                    )
+                );
         return res;
     }
     template<class Matrix>
