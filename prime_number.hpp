@@ -2,20 +2,13 @@
 
 namespace prime_number {
     constexpr auto debug_prime_number = false;
-    constexpr bool is_prime(auto n) {
+    template<
+        typename Int,
+        typename IntIterate = Int>
+    constexpr bool is_prime(Int n) {
         using std::gcd;
-        for (decltype(n) i = 2; i*i < n; i++) {
+        for (IntIterate i = 2; i*i < n; i++) {
             if (gcd(i, n) > 1) {
-                return false;
-            }
-        }
-        return n>=2;
-    }
-    template<class T, T V>
-    constexpr bool is_prime(std::integral_constant<T, V> n) {
-        using std::gcd;
-        for (T i = 2; i*i < n; i++) {
-            if (gcd(i, static_cast<T>(n)) > 1) {
                 return false;
             }
         }
@@ -37,10 +30,6 @@ namespace prime_number {
         T m_value;
     };
 
-    template<class T>
-    std::ostream& operator<<(std::ostream& out, prime_number<T> p) {
-        return out << static_cast<T>(p);
-    }
     template<class T>
     auto operator+(const prime_number<T>& lhs, const auto& rhs) {
         return static_cast<T>(lhs) + rhs;
@@ -109,7 +98,6 @@ namespace prime_number {
     auto operator<=>(const prime_number<T>& lhs, const prime_number<U>& rhs) {
         return static_cast<T>(lhs) <=> static_cast<U>(rhs);
     }
-
 
     template<class T>
     constexpr bool is_prime(prime_number<T> p) {
