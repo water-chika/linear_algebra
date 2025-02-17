@@ -268,7 +268,7 @@ namespace linear_algebra {
     class inverse{
     public:
         auto operator()(auto v) {
-            return 1/v;
+            return static_cast<decltype(v)>(1)/v;
         }
     };
     class is_invertible{
@@ -345,23 +345,49 @@ namespace linear_algebra {
     Matrix eliminate(Matrix A) {
         return do_eliminate(A);
     }
+
+    constexpr auto debug_matrix_back_substitution = false;
     
-    template<concept_helper::matrix Matrix>
-    Matrix& do_back_substitution(Matrix& A) {
+    template<concept_helper::matrix Matrix,
+        typename Element_subtract = std::minus<void>,
+        typename Element_multiplies = std::multiplies<void>,
+        typename Element_divides = std::divides<void>,
+        typename Element_inverse = inverse,
+        typename Element_is_invertible = is_invertible>
+    auto& do_back_substitution(Matrix& A,
+            Element_subtract element_subtract = std::minus<void>{},
+            Element_multiplies element_multiplies = std::multiplies<void>{},
+            Element_divides element_divides = std::divides<void>{},
+            Element_inverse element_inverse = inverse{},
+            Element_is_invertible element_is_invertible = is_invertible{}
+            ) {
         for (auto row = A.size().get_row() - 1; true; row--) {
             for (auto column = A.size().get_row() - 1; true; column--) {
                 if (column != row) {
-                    A.row(row) -= A.row(column) *
-                        A[{row, column}];
+                    A.row(row) = subtract(
+                            A.row(row),
+                            multiplies(
+                                A.row(column),
+                                A[{row, column}],
+                                {},
+                                element_multiplies
+                                ),
+                            {},
+                            element_subtract
+                            );
                 }
                 else {
                     auto pivot = A[std::remove_cvref_t<decltype(A.size())>{}.set_row(row).set_column(row)];
-                    auto zero = decltype(pivot){0};
-                    if (pivot == zero) {
+                    if (!element_is_invertible(pivot)) {
                         throw std::runtime_error{ "matrix is not invertible" };
                     }
-                    auto one = decltype(pivot){1};
-                    A.row(row) *= one / pivot;
+                    auto inv_pivot = element_inverse(pivot);
+                    A.row(row) = multiplies(
+                            A.row(row),
+                            inv_pivot,
+                            {},
+                            element_multiplies
+                            );
                 }
                 if (column == row) {
                     break;

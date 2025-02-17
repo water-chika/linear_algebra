@@ -202,13 +202,22 @@ namespace linear_algebra {
         }
         return std::forward<decltype(lhs)>(lhs);
     }
-    auto dot_product(const vector_or_vector_reference auto& lhs, const vector_or_vector_reference auto& rhs) {
+    template<
+        typename Element_add = std::plus<void>,
+        typename Element_multiplies = std::multiplies<void>
+        >
+    auto dot_product(
+            const vector_or_vector_reference auto& lhs,
+            const vector_or_vector_reference auto& rhs,
+            Element_add&& element_add = std::plus<void>{},
+            Element_multiplies&& element_multiplies = std::multiplies<void>{}
+            ) {
         if (lhs.size() != rhs.size()) {
             throw std::runtime_error{ "size not equal" };
         }
-        auto res{ lhs[0]*rhs[0] };
+        auto res{ element_multiplies(lhs[0], rhs[0]) };
         for (size_t i = 1; i < lhs.size(); i++) {
-            res += lhs[i] * rhs[i];
+            res = element_add(res, element_multiplies(lhs[i], rhs[i]));
         }
         return res;
     }

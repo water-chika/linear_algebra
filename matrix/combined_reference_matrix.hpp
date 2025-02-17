@@ -117,7 +117,12 @@ namespace linear_algebra{
                     element_divides,
                     element_inverse,
                     element_is_invertible
-                    )
+                    ),
+                element_subtract,
+                element_multiplies,
+                element_divides,
+                element_inverse,
+                element_is_invertible
                 );
         return res;
     }

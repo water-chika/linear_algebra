@@ -47,7 +47,7 @@ namespace modular_arithmetic {
             throw std::runtime_error{"0 does not have inverse"};
         }
         else {
-            auto n = inverse(mod(m, value), value);
+            auto n = mod((value-1) * inverse(mod(m, value), value), value) ;
             res = (n*m+1) / value;
         }
         return std::forward<Res>(res);
