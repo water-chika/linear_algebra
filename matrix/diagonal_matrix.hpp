@@ -19,15 +19,18 @@ namespace linear_algebra{
                 return static_cast<T>(0);
             }
         }
+        static diagonal_matrix from_diagonals(std::array<T, SIZE> diagonals) {
+            diagonal_matrix D;
+            D.m_diagonals = diagonals;
+            return D;
+        }
     private:
         std::array<T, SIZE> m_diagonals;
-        friend diagonal_matrix<T,SIZE> make_diagonal_matrix<T,SIZE>(std::array<T,SIZE> diagonals);
+        friend diagonal_matrix<T,SIZE> make_diagonal_matrix(std::array<T,SIZE> diagonals);
     };
     template<class T, size_t SIZE>
     diagonal_matrix<T,SIZE> make_diagonal_matrix(std::array<T, SIZE> diagonals) {
-        diagonal_matrix<T, SIZE> D;
-        D.m_diagonals = diagonals;
-        return D;
+        return diagonal_matrix<T,SIZE>::from_diagonals(diagonals);
     }
     template<linear_algebra::concept_helper::matrix Matrix, class T, size_t SIZE>
     auto operator*(
