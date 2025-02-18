@@ -59,27 +59,17 @@ namespace linear_algebra{
                 return right_half.column(i-l_size);
             }
         }
-        auto row(size_t i) const {
+        auto row(this auto&& self, size_t i) {
             return
                 row_type<
                     combined_reference_matrix,
                     fixsized_vector<
-                        std::remove_cvref_t<decltype(left_half[{0, 0}])>,
-                        fixsized_matrix_column_count<M1>() + fixsized_matrix_column_count<M2>()
+                        std::remove_cvref_t<decltype(self.left_half[{0, 0}])>,
+                        fixsized_matrix_column_count<typename std::remove_cvref_t<decltype(self)>::left_matrix_type>
+                            + fixsized_matrix_column_count<typename std::remove_cvref_t<decltype(self)>::right_matrix_type>
                     >
                 >
-                {*this, i};
-        }
-        auto row(size_t i) {
-            return
-                row_type<
-                    combined_reference_matrix,
-                    fixsized_vector<
-                        std::remove_cvref_t<decltype(left_half[{0, 0}])>,
-                        fixsized_matrix_column_count<M1> + fixsized_matrix_column_count<M2>
-                    >
-                >
-                {*this, i};
+                {self, i};
         }
         auto& operator[](index_type i) {
             auto l_size = left_half.size().get_column();

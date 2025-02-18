@@ -33,12 +33,12 @@ namespace linear_algebra {
             }
         }
 
-		const auto& column(size_t i) const {
-			return m_columns[i];
-		}
-		auto& column(size_t i) {
-			return m_columns[i];
-		}
+        auto&& column(this auto&& self, size_t i) {
+            return std::forward_like<decltype(self)>(
+                        parent_cast<fixsized_matrix&>(self)
+                        .m_columns[i]
+                    );
+        }
 		auto row(size_t i) {
 			fixsized_pointer_vector<T, COLUMN> res{};
 			for (size_t j = 0; j < COLUMN; j++) {
@@ -53,12 +53,12 @@ namespace linear_algebra {
 			}
 			return res;
 		}
-		auto& operator[](fixsized_matrix_index i) {
-			return m_columns[i.get_column()][i.get_row()];
-		}
-		const auto& operator[](fixsized_matrix_index i) const {
-			return m_columns[i.get_column()][i.get_row()];
-		}
+        auto&& operator[](this auto&& self, fixsized_matrix_index i) {
+            return std::forward_like<decltype(self)>(
+                    parent_cast<fixsized_matrix&>(self)
+                    .m_columns[i.get_column()][i.get_row()]
+                    );
+        }
 		static constexpr auto size() {
 			return fixsized_matrix_index{ ROW, COLUMN };
 		}

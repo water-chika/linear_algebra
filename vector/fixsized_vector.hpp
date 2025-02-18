@@ -2,6 +2,8 @@
 
 #include "vector.hpp"
 
+#include "type_cast.hpp"
+
 namespace linear_algebra {
     template<class T, size_t Size>
     class fixsized_vector {
@@ -20,11 +22,11 @@ namespace linear_algebra {
         size_t size() const {
             return Size;
         }
-        T& operator[](size_t i) {
-            return m_data[i];
-        }
-        const T& operator[](size_t i) const {
-            return m_data[i];
+        auto&& operator[](this auto&& self, size_t i) {
+            return std::forward_like<decltype(self)>(
+                        parent_cast<fixsized_vector&>(self)
+                        .m_data[i]
+                    );
         }
     private:
         std::array<T, Size> array_from_initializer_list(std::initializer_list<T> data) {
@@ -56,11 +58,9 @@ namespace linear_algebra {
         void set(size_t i, T* p) {
             m_data[i] = p;
         }
-        T& operator[](size_t i) {
-            return *m_data[i];
-        }
-        const T& operator[](size_t i) const {
-            return *m_data[i];
+        auto&& operator[](this auto&& child, size_t i) {
+            auto& self = parent_cast<fixsized_pointer_vector&>(child);
+            return *self.m_data[i];
         }
     private:
         std::array<T*, Size> array_from_initializer_list(std::initializer_list<T*> data) {
