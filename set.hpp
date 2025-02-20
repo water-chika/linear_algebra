@@ -12,22 +12,30 @@ namespace set {
     template<typename T>
     concept set = is_set_v<T>;
 
-    template<set A, set B>
-    constexpr bool is_same_set = std::is_same_v<A,B>;
+    template<typename A, typename B>
+    struct is_same_set {
+        static_assert(std::is_same_v<A,B>, "not sure A and B is same set");
+        static constexpr bool value = std::is_same_v<A,B>;
+    };
 
     template<typename A, typename B>
-    concept set_same_as = is_same_set<A, B>;
+    constexpr bool is_same_set_v = is_same_set<A,B>::value;
+
+    template<typename A, typename B>
+    concept set_same_as = is_same_set_v<A, B>;
 
     template<typename Set>
     struct is_countable {
-        static constexpr bool value = true;
+        static_assert(std::is_arithmetic_v<Set> && std::numeric_limits<Set>::is_exact, "not sure Set is countable");
+        static constexpr bool value = std::is_arithmetic_v<Set> && std::numeric_limits<Set>::is_exact;
     };
     template<typename Set>
     constexpr bool is_countable_v = is_countable<Set>::value;
 
     template<typename A, typename B>
     struct is_subset {
-        static constexpr bool value = false;
+        static_assert(is_same_set_v<A,B>, "not sure A is subset of B");
+        static constexpr bool value = is_same_set_v<A,B>;
     };
     template<typename A, typename B>
     constexpr bool is_subset_v = is_subset<A,B>::value;
@@ -60,6 +68,14 @@ namespace set {
            std::numeric_limits<A>::digits <= std::numeric_limits<B>::digits &&
            std::numeric_limits<A>::min_exponent >= std::numeric_limits<B>::min_exponent &&
            std::numeric_limits<A>::max_exponent <= std::numeric_limits<B>::max_exponent;
+    };
+
+    template<std::integral A, std::floating_point B>
+    struct is_subset<A, B> {
+        static_assert(std::numeric_limits<A>::radix == std::numeric_limits<B>::radix, "not sure A is subset of B");
+        static constexpr bool value =
+            std::numeric_limits<A>::radix == std::numeric_limits<B>::radix &&
+            std::numeric_limits<A>::digits <= std::numeric_limits<B>::digits;
     };
 
     template<template<typename> typename Temp, typename A0, typename... An>
