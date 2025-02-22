@@ -26,7 +26,6 @@ namespace linear_algebra{
         }
     private:
         std::array<T, SIZE> m_diagonals;
-        friend diagonal_matrix<T,SIZE> make_diagonal_matrix(std::array<T,SIZE> diagonals);
     };
     template<class T, size_t SIZE>
     diagonal_matrix<T,SIZE> make_diagonal_matrix(std::array<T, SIZE> diagonals) {
