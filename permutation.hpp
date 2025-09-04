@@ -33,4 +33,26 @@ namespace permutation {
                 );
         return permutation(std::move(data));
     }
+
+    class cycle {
+    public:
+        auto size() const {
+            return m_data.size();
+        }
+        auto operator()(size_t x) const {
+            assert(x < size());
+            auto ite = std::find(m_data.begin(), m_data.end(), x);
+            if (ite == m_data.end()) {
+                return x;
+            }
+            else if (ite + 1 == m_data.end()){
+                return *m_data.begin();
+            }
+            else {
+                return *(ite+1);
+            }
+        }
+    private:
+        std::vector<size_t> m_data;
+    };
 }
