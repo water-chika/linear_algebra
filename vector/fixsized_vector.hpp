@@ -47,7 +47,7 @@ namespace linear_algebra {
 
         template<vector Vector>
         auto& operator=(const Vector& v) {
-            for (size_t i = 0; i < Size; i++) {
+            for (size_t i = 0; i < size(); i++) {
                 this->operator[](i) = v[i];
             }
             return *this;
