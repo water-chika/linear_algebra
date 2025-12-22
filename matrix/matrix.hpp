@@ -244,16 +244,24 @@ namespace linear_algebra {
             Matrix&& A) {
         return A*t;
     }
+
     template<linear_algebra::concept_helper::matrix Matrix, typename T>
-        requires std::invocable<std::divides<void>, element_type<Matrix>, T>
-    auto operator/(
+        requires std::invocable<std::divides<void>, linear_algebra::element_type<Matrix>, T>
+    auto matrix_element_divides(
             Matrix&& A,
             T t) {
         auto B = A;
-        foreach_element(B, [t](element_type<decltype(B)>& e) {
+        foreach_element(B, [t](linear_algebra::element_type<decltype(B)>& e) {
                 e /= t;
                 });
         return B;
+    }
+    template<linear_algebra::concept_helper::matrix Matrix, typename T>
+        requires std::invocable<std::divides<void>, linear_algebra::element_type<Matrix>, T>
+    auto operator/(
+            Matrix&& A,
+            T t) {
+        return matrix_element_divides(A, t);
     }
     auto& operator/=(
             linear_algebra::concept_helper::matrix auto&& A,
@@ -262,24 +270,33 @@ namespace linear_algebra {
         return A;
     }
 
-    auto operator/(
+    auto matrix_divides(
             linear_algebra::concept_helper::matrix auto&& A,
             linear_algebra::concept_helper::matrix auto&& B) {
         return A * inverse(B);
     }
 
+    auto operator/(
+            linear_algebra::concept_helper::matrix auto&& A,
+            linear_algebra::concept_helper::matrix auto&& B) {
+        return matrix_divides(A,B);
+    }
+
 
     auto& operator<<(std::ostream& out, linear_algebra::concept_helper::matrix auto&& A) {
-        out << "{" << std::endl;
         auto [row_count, column_count] = A.size();
+        bool row_is_1 = row_count  == 1;
+        out << "{";
+        if (!row_is_1) out<< std::endl;
         iterate_from_0_to(row_count,
-            [&out, &A, column_count](auto row) {
+            [&out, &A, column_count, row_is_1](auto row) {
                 out << "{";
                 iterate_from_0_to(column_count,
                     [&out, &A, &row](auto column) {
                         out << std::setw(8) << A[{row, column}] << ",";
                     });
-                out << "}," << std::endl;
+                out << "},";
+                if (!row_is_1) out<< std::endl;
             });
         out << "}";
         return out;
@@ -520,7 +537,7 @@ namespace linear_algebra {
             [&res, &U](auto i) {
                 res *= U[{i, i}];
             });
-        return res;
+        return determinant(res);
     }
 
     template<concept_helper::matrix Matrix>
