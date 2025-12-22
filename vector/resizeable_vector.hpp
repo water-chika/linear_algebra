@@ -35,8 +35,8 @@ namespace linear_algebra {
         using element_type = T::element_type;
         using referenced_type = resizeable_vector<element_type>;
         reference_vector(T ref) : m_ref{ref} {}
-        template<vector Vector>
-        auto& operator=(const Vector& v) {
+        auto& operator=(const vector_or_vector_reference auto& v) {
+            assert(size() == v.size());
             for (size_t i = 0; i < size(); i++) {
                 this->operator[](i) = v[i];
             }

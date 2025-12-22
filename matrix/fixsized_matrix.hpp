@@ -13,19 +13,19 @@ namespace linear_algebra {
         using element_type = T;
 		using index_type = fixsized_matrix_index;
 
-		fixsized_matrix()
+		constexpr fixsized_matrix()
 			: m_columns{} {}
-		fixsized_matrix(std::initializer_list<std::initializer_list<T>> row_list)
+		constexpr fixsized_matrix(std::initializer_list<std::initializer_list<T>> row_list)
 			: m_columns{ create_columns_from_rows(row_list) } {}
-		fixsized_matrix(std::array<column_vector<T, ROW>, COLUMN> columns) : m_columns{ columns } {}
-		fixsized_matrix(std::initializer_list<column_vector<T, ROW>> columns) : m_columns{} {
+		constexpr fixsized_matrix(std::array<column_vector<T, ROW>, COLUMN> columns) : m_columns{ columns } {}
+		constexpr fixsized_matrix(std::initializer_list<column_vector<T, ROW>> columns) : m_columns{} {
 			size_t i = 0;
 			for (auto col : columns) {
 				m_columns[i] = col;
 				i++;
 			}
 		}
-        fixsized_matrix(identity_matrix_type I) : m_columns{} {
+        constexpr fixsized_matrix(identity_matrix_type I) : m_columns{} {
             for (size_t i = 0; i < COLUMN; i++) {
                 for (size_t j = 0; j < ROW; j++) {
                     m_columns[i][j] = ((i == j) ? 1 : 0);
@@ -128,6 +128,16 @@ namespace linear_algebra {
                     res[index] = dot_product(lhs.row(index.get_row()), rhs.column(index.get_column()));
                 });
         return res;
+	}
+	template<class T, size_t m, size_t n>
+	auto& operator*=(fixsized_matrix<T, m, n>& lhs, fixsized_matrix<T, n, n> rhs) {
+        fixsized_matrix<T, m, n> res;
+        foreach_index(res,
+                [&res, &lhs, &rhs](auto index) {
+                    res[index] = dot_product(lhs.row(index.get_row()), rhs.column(index.get_column()));
+                });
+        lhs = res;
+        return lhs;
 	}
 	template<class T, size_t m, size_t n>
 	auto operator*(const fixsized_matrix<T, m, n>& lhs, const fixsized_vector<T, n> v) {

@@ -11,6 +11,18 @@
             t.real();
             t.imag();
         };
+ 
+template<complex_type C>
+struct std::formatter<C, char> {
+    constexpr auto parse(auto& ctx) {
+        return ctx.end();
+    }
+
+    constexpr auto format(const C& c, auto& ctx) {
+        return ctx.out().out;
+    }
+};
+
 
 namespace linear_algebra {
     template<class T>

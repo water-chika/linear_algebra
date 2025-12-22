@@ -9,20 +9,20 @@ namespace linear_algebra {
     class fixsized_vector {
     public:
         using element_type = T;
-        fixsized_vector() : m_data{} {}
-        fixsized_vector(std::initializer_list<T> data) : m_data{ array_from_initializer_list(data) } {}
+        constexpr fixsized_vector() : m_data{} {}
+        constexpr fixsized_vector(std::initializer_list<T> data) : m_data{ array_from_initializer_list(data) } {}
         template<vector_or_vector_reference Vector>
-        fixsized_vector(Vector v) : m_data{}
+        constexpr fixsized_vector(Vector v) : m_data{}
         {
             assert(v.size() == Size);
             for (size_t i = 0; i < Size; i++) {
                 m_data[i] = v[i];
             }
         }
-        size_t size() const {
+        constexpr size_t size() const {
             return Size;
         }
-        auto&& operator[](this auto&& self, size_t i) {
+        constexpr auto&& operator[](this auto&& self, size_t i) {
             return std::forward_like<decltype(self)>(
                         parent_cast<fixsized_vector&>(self)
                         .m_data[i]

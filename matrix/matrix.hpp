@@ -129,6 +129,22 @@ namespace linear_algebra {
             }
         );
     }
+    template<concept_helper::matrix Matrix1, concept_helper::matrix Matrix2, class F>
+        requires std::invocable<F, element_type<Matrix1>&, element_type<Matrix2>&>
+    void foreach_element(Matrix1& A, Matrix2& B, F fn) {
+        auto [row, column] = A.size();
+        assert(A.size() == B.size());
+        iterate_from_0_to(row,
+            [&A, &B, &fn, column](auto i) {
+                iterate_from_0_to(column,
+                    [&A, &B, &fn, i](auto j) {
+                        using index_t = typename Matrix1::index_type;
+                        auto index = index_t{i,j};
+                        fn(A[index], B[index]);
+                    });
+            }
+        );
+    }
     bool operator==(const concept_helper::matrix_index auto& i, const concept_helper::matrix_index auto& j) {
         return i.get_column() == j.get_column() && i.get_row() == j.get_row();
     }
@@ -195,17 +211,20 @@ namespace linear_algebra {
         return element_op(lhs, rhs, element_div);
     }
 
-    auto operator-(const concept_helper::matrix auto& A, const concept_helper::matrix auto& B) {
-        if (A.size() != B.size()) {
-            throw std::runtime_error{"not mached matrix size for operator-"};
-        }
+    auto operator+(const concept_helper::matrix auto& A, const concept_helper::matrix auto& B) {
         auto res = A;
-        auto [row_count, column_count] = A.size();
-        for (decltype(row_count) i = 0; i < row_count; i++) {
-            for (decltype(column_count) j = 0; j < column_count; j++) {
-                res[{i,j}] -= B[{i,j}];
-            }
-        }
+        foreach_element(res, B,
+                [](auto& r, auto& b) {
+                    r += b;
+                });
+        return res;
+    }
+    auto operator-(const concept_helper::matrix auto& A, const concept_helper::matrix auto& B) {
+        auto res = A;
+        foreach_element(res, B,
+                [](auto& r, auto& b) {
+                    r -= b;
+                });
         return res;
     }
 
@@ -225,9 +244,11 @@ namespace linear_algebra {
             Matrix&& A) {
         return A*t;
     }
+    template<linear_algebra::concept_helper::matrix Matrix, typename T>
+        requires std::invocable<std::divides<void>, element_type<Matrix>, T>
     auto operator/(
-            linear_algebra::concept_helper::matrix auto&& A,
-            auto t) {
+            Matrix&& A,
+            T t) {
         auto B = A;
         foreach_element(B, [t](element_type<decltype(B)>& e) {
                 e /= t;
@@ -240,6 +261,13 @@ namespace linear_algebra {
         A = A / t;
         return A;
     }
+
+    auto operator/(
+            linear_algebra::concept_helper::matrix auto&& A,
+            linear_algebra::concept_helper::matrix auto&& B) {
+        return A * inverse(B);
+    }
+
 
     auto& operator<<(std::ostream& out, linear_algebra::concept_helper::matrix auto&& A) {
         out << "{" << std::endl;
@@ -257,7 +285,6 @@ namespace linear_algebra {
         return out;
     }
 
-
     template<std::integral Int>
     void for_index_range(std::convertible_to<Int> auto&& begin, Int end, std::invocable<Int> auto&& f) {
         for (Int i = begin; i < end; i++) {
@@ -271,10 +298,15 @@ namespace linear_algebra {
             return static_cast<decltype(v)>(1)/v;
         }
     };
+    template<typename T>
+        requires std::integral<T> || std::floating_point<T> || complex_type<T>
+    auto determinant(T x) {
+        return x;
+    }
     class is_invertible{
     public:
         auto operator()(auto v) {
-            return v != decltype(v){0};
+            return determinant(v) != decltype(determinant(v)){0};
         }
     };
 
@@ -379,7 +411,7 @@ namespace linear_algebra {
                 else {
                     auto pivot = A[std::remove_cvref_t<decltype(A.size())>{}.set_row(row).set_column(row)];
                     if (!element_is_invertible(pivot)) {
-                        throw std::runtime_error{ "matrix is not invertible" };
+                        throw std::runtime_error{ std::format("matrix is not invertible") };
                     }
                     auto inv_pivot = element_inverse(pivot);
                     A.row(row) = multiplies(
@@ -468,10 +500,22 @@ namespace linear_algebra {
         return std::pair{res, R};
     }
 
+    template<typename T>
+    struct unit_value_struct {
+        static constexpr T value = 1;
+    };
+    template<typename T>
+    constexpr T unit_value = unit_value_struct<T>::value;
+
+    template<concept_helper::matrix Matrix>
+    struct unit_value_struct<Matrix> {
+        static constexpr Matrix value = I;
+    };
+
     template<concept_helper::matrix Matrix>
     auto determinant(Matrix A) {
         auto U = eliminate(A);
-        std::remove_cvref_t<decltype(U[{0, 0}]) > res = 1;
+        auto res = unit_value<std::remove_cvref_t<decltype(U[{0, 0}])>>;
         iterate_from_0_to(U.size().get_row(),
             [&res, &U](auto i) {
                 res *= U[{i, i}];
@@ -543,3 +587,7 @@ namespace linear_algebra {
         return singular_value_decompose(A);
     }
 }
+
+template<linear_algebra::concept_helper::matrix Matrix>
+struct std::formatter<Matrix, char> {
+};
