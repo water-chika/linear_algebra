@@ -45,7 +45,7 @@ namespace linear_algebra {
         fixsized_pointer_vector() : m_data{} {}
         fixsized_pointer_vector(std::initializer_list<T*> data) : m_data{ array_from_initializer_list(data) } {}
 
-        template<vector Vector>
+        template<vectorlike Vector>
         auto& operator=(const Vector& v) {
             for (size_t i = 0; i < size(); i++) {
                 this->operator[](i) = v[i];

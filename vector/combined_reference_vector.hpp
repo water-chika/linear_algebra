@@ -2,7 +2,7 @@
 #include "vector/vector.hpp"
 
 namespace linear_algebra {
-    template<vector V1, vector V2>
+    template<vectorlike V1, vectorlike V2>
     class combined_reference_vector {
     public:
         using elment_type = typename V1::element_type;
