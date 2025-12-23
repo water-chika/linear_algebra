@@ -5,24 +5,7 @@
 #include <cassert>
 #include <cmath>
 
-    template<class T>
-    concept complex_type =
-        requires (T t) {
-            t.real();
-            t.imag();
-        };
- 
-template<complex_type C>
-struct std::formatter<C, char> {
-    constexpr auto parse(auto& ctx) {
-        return ctx.end();
-    }
-
-    constexpr auto format(const C& c, auto& ctx) {
-        return ctx.out().out;
-    }
-};
-
+#include <complex_number.hpp>
 
 namespace linear_algebra {
     template<class T>
@@ -280,13 +263,7 @@ namespace linear_algebra {
     }
 
 
-    auto length_square(std::floating_point auto c) {
-        return std::norm(c);
-    }
-
-    auto length_square(complex_type auto c) {
-        return std::norm(c);
-    }
+    using complex_number::length_square;
     template<vector_or_vector_reference Vector>
     auto length_square(const Vector& v) {
         element_type<Vector> t{0};

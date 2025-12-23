@@ -3,6 +3,7 @@
 #include "vector/fixsized_vector.hpp"
 #include <algorithm>
 #include <iomanip>
+#include <complex_number.hpp>
 
 namespace linear_algebra {
     namespace concept_helper {
@@ -316,7 +317,7 @@ namespace linear_algebra {
         }
     };
     template<typename T>
-        requires std::integral<T> || std::floating_point<T> || complex_type<T>
+        requires scalar<T>
     auto determinant(T x) {
         return x;
     }

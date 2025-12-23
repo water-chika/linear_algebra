@@ -16,3 +16,6 @@ add_library(
 )
 target_include_directories(linear_algebra PUBLIC ${CMAKE_CURRENT_SOURCE_DIR})
 target_compile_features(linear_algebra PUBLIC cxx_std_23)
+
+add_subdirectory(subprojects/complex_number)
+target_link_libraries(linear_algebra PUBLIC complex_number)
