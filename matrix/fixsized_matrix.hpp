@@ -7,7 +7,8 @@ namespace linear_algebra {
 	
     using fixsized_matrix_index = matrix_index<size_t,size_t>;
 
-	template<class T, size_t ROW, size_t COLUMN>
+    template<class T, size_t ROW, size_t COLUMN>
+        requires (sizeof(T)*ROW*COLUMN < 4*1024*1024)
 	class fixsized_matrix {
 	public:
         using element_type = T;

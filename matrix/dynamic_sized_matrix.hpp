@@ -5,12 +5,12 @@
 
 namespace linear_algebra {
     using dynamic_sized_matrix_index = matrix_index<size_t,size_t>;
-    template<class T>
+    template<class T, uint32_t ROW=0, uint32_t COLUMN=0>
     class dynamic_sized_matrix {
     public:
         using element_type = T;
         using index_type = dynamic_sized_matrix_index;
-        dynamic_sized_matrix() = default;
+        dynamic_sized_matrix() : dynamic_sized_matrix({ROW, COLUMN}) {}
         dynamic_sized_matrix(index_type s)
             : m_size{s}, m_elements(m_size.get_column() * m_size.get_row())
         {}
