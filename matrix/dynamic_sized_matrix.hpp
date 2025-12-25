@@ -125,16 +125,4 @@ namespace linear_algebra {
                 });
         return AT;
     }
-    template<class T>
-    auto operator*(dynamic_sized_matrix<T> lhs, dynamic_sized_matrix<T> rhs) {
-        assert(lhs.size().get_column() == rhs.size().get_row());
-        auto size = lhs.size();
-        size.set_column(rhs.size().get_column());
-        dynamic_sized_matrix<T> res(size);
-        foreach_index(res,
-                [&res, &lhs, &rhs](auto index) {
-                    res[index] = dot_product(lhs.row(index.get_row()), rhs.column(index.get_column()));
-                });
-        return res;
-    }
 }

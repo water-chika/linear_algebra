@@ -62,6 +62,9 @@ namespace linear_algebra {
 		static constexpr auto size() {
 			return fixsized_matrix_index{ ROW, COLUMN };
 		}
+        static constexpr auto resize(index_type s) {
+            assert(s.get_row() == ROW && s.get_column() == COLUMN);
+        }
 	private:
 		static auto create_columns_by_get_element(auto&& get_element) {
 			std::array<fixsized_vector<T, ROW>, COLUMN> columns{};
@@ -100,43 +103,15 @@ namespace linear_algebra {
 		return res;
 	}
 
-	template<class T, size_t m, size_t n, size_t p,
-        typename Element_add = std::plus<void>,
-        typename Element_multiplies = std::multiplies<void>>
-    auto multiplies(
-            fixsized_matrix<T, m, n> lhs,
-            fixsized_matrix<T, n, p> rhs,
-            Element_add&& element_add = std::plus<void>{},
-            Element_multiplies&& element_multiplies = std::multiplies<void>{}) {
-        fixsized_matrix<T, m, p> res;
-        foreach_index(res,
-                [&res, &lhs, &rhs, &element_add, &element_multiplies](auto index) {
-                    res[index] = dot_product(
-                            lhs.row(index.get_row()),
-                            rhs.column(index.get_column()),
-                            element_add,
-                            element_multiplies);
-                });
-        return res;
-    }
-
 	template<class T, size_t m, size_t n, size_t p>
-	auto operator*(fixsized_matrix<T, m, n> lhs, fixsized_matrix<T, n, p> rhs) {
+	auto operator*(const fixsized_matrix<T, m, n>& lhs, const fixsized_matrix<T, n, p>& rhs) {
         fixsized_matrix<T, m, p> res;
-        foreach_index(res,
-                [&res, &lhs, &rhs](auto index) {
-                    res[index] = dot_product(lhs.row(index.get_row()), rhs.column(index.get_column()));
-                });
-        return res;
+        return multiplies(lhs, rhs, res);
 	}
 	template<class T, size_t m, size_t n>
 	auto& operator*=(fixsized_matrix<T, m, n>& lhs, fixsized_matrix<T, n, n> rhs) {
         fixsized_matrix<T, m, n> res;
-        foreach_index(res,
-                [&res, &lhs, &rhs](auto index) {
-                    res[index] = dot_product(lhs.row(index.get_row()), rhs.column(index.get_column()));
-                });
-        lhs = res;
+        lhs = multiplies(lhs, rhs, res);
         return lhs;
 	}
 	template<class T, size_t m, size_t n>

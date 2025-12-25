@@ -168,8 +168,8 @@ namespace linear_algebra {
 
     template<concept_helper::matrix MatrixLhs,
         concept_helper::matrix MatrixRhs,
-        concept_helper::matrix MatrixRes,
-        class ElementOp>
+        typename ElementOp,
+        concept_helper::matrix MatrixRes = MatrixLhs>
     auto element_op(const MatrixLhs& lhs, const MatrixRhs& rhs, ElementOp&& element_op) {
         if (debug_matrix) {
             assert(lhs.size() == rhs.size());
@@ -187,46 +187,44 @@ namespace linear_algebra {
         concept_helper::matrix MatrixRhs,
         concept_helper::matrix MatrixRes = MatrixLhs,
         class ElementAdd = std::plus<void>>
-    auto add(const MatrixLhs& lhs, const MatrixRhs& rhs, ElementAdd&& element_add) {
+    auto add(const MatrixLhs& lhs, const MatrixRhs& rhs, ElementAdd&& element_add = ElementAdd{}) {
         return element_op(lhs, rhs, element_add);
     }
     template<concept_helper::matrix MatrixLhs,
         concept_helper::matrix MatrixRhs,
         concept_helper::matrix MatrixRes = MatrixLhs,
         class ElementSubtract = std::minus<void>>
-    auto subtract(const MatrixLhs& lhs, const MatrixRhs& rhs, ElementSubtract&& element_sub) {
+    auto subtract(const MatrixLhs& lhs, const MatrixRhs& rhs, ElementSubtract&& element_sub = ElementSubtract{}) {
         return element_op(lhs, rhs, element_sub);
     }
     template<concept_helper::matrix MatrixLhs,
         concept_helper::matrix MatrixRhs,
         concept_helper::matrix MatrixRes = MatrixLhs,
         class ElementMultiplies = std::multiplies<void>>
-    auto multiplies(const MatrixLhs& lhs, const MatrixRhs& rhs, ElementMultiplies&& element_mul) {
+    auto element_multiplies(const MatrixLhs& lhs, const MatrixRhs& rhs, ElementMultiplies&& element_mul = ElementMultiplies{}) {
         return element_op(lhs, rhs, element_mul);
     }
     template<concept_helper::matrix MatrixLhs,
         concept_helper::matrix MatrixRhs,
         concept_helper::matrix MatrixRes = MatrixLhs,
         class ElementDivides = std::divides<void>>
-    auto divides(const MatrixLhs& lhs, const MatrixRhs& rhs, ElementDivides&& element_div) {
+    auto divides(const MatrixLhs& lhs, const MatrixRhs& rhs, ElementDivides&& element_div = ElementDivides{}) {
         return element_op(lhs, rhs, element_div);
     }
 
     auto operator+(const concept_helper::matrix auto& A, const concept_helper::matrix auto& B) {
-        auto res = A;
-        foreach_element(res, B,
-                [](auto& r, auto& b) {
-                    r += b;
-                });
-        return res;
+        return add(A, B);
+    }
+    auto& operator+=(concept_helper::matrix auto& A, const concept_helper::matrix auto& B) {
+        A = add(A, B);
+        return A;
     }
     auto operator-(const concept_helper::matrix auto& A, const concept_helper::matrix auto& B) {
-        auto res = A;
-        foreach_element(res, B,
-                [](auto& r, auto& b) {
-                    r -= b;
-                });
-        return res;
+        return subtract(A, B);
+    }
+    auto& operator-=(concept_helper::matrix auto& A, const concept_helper::matrix auto& B) {
+        A = subtract(A, B);
+        return A;
     }
 
     template<linear_algebra::concept_helper::matrix Matrix>
@@ -281,6 +279,38 @@ namespace linear_algebra {
             linear_algebra::concept_helper::matrix auto&& A,
             linear_algebra::concept_helper::matrix auto&& B) {
         return matrix_divides(A,B);
+    }
+
+    template<concept_helper::matrix MatrixLhs,
+        concept_helper::matrix MatrixRhs,
+        concept_helper::matrix MatrixRes = std::remove_cvref_t<MatrixLhs>,
+        typename Element_add = std::plus<void>,
+        typename Element_multiplies = std::multiplies<void>
+            >
+    auto&& multiplies(
+            MatrixLhs&& lhs,
+            MatrixRhs&& rhs,
+            MatrixRes&& res = {},
+            Element_add&& element_add = std::plus<void>{},
+            Element_multiplies&& element_multiplies = std::multiplies<void>{}
+            ) {
+        auto size = lhs.size();
+        size.set_column(rhs.size().get_column());
+        res.resize(size);
+        foreach_index(res,
+                [&res, &lhs, &rhs, &element_add, &element_multiplies](auto index) {
+                    res[index] = dot_product(
+                            lhs.row(index.get_row()),
+                            rhs.column(index.get_column()),
+                            element_add,
+                            element_multiplies);
+                });
+        return std::forward<MatrixRes>(res);
+    }
+    auto operator*(
+            linear_algebra::concept_helper::matrix auto&& A,
+            linear_algebra::concept_helper::matrix auto&& B) {
+        return multiplies(A,B);
     }
 
 
