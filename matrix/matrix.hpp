@@ -167,17 +167,32 @@ namespace linear_algebra {
     constexpr auto debug_matrix = false;
 
     template<concept_helper::matrix MatrixLhs,
+        concept_helper::matrix MatrixRhs>
+    struct element_op_res_struct {
+        using type = MatrixLhs;
+    };
+    template<concept_helper::matrix MatrixLhs,
+        concept_helper::matrix MatrixRhs>
+    using element_op_res_t = element_op_res_struct<MatrixLhs, MatrixRhs>::type;
+    template<concept_helper::matrix MatrixLhs,
+        concept_helper::matrix MatrixRhs>
+            requires (!std::convertible_to<element_type<MatrixRhs>, element_type<MatrixLhs>>)
+    struct element_op_res_struct<MatrixLhs, MatrixRhs> {
+        using type = MatrixRhs;
+    };
+
+    template<concept_helper::matrix MatrixLhs,
         concept_helper::matrix MatrixRhs,
         typename ElementOp,
-        concept_helper::matrix MatrixRes = MatrixLhs>
-    auto element_op(const MatrixLhs& lhs, const MatrixRhs& rhs, ElementOp&& element_op) {
+        concept_helper::matrix MatrixRes = element_op_res_t<MatrixLhs, MatrixRhs>>
+    auto element_op(const MatrixLhs& lhs, const MatrixRhs& rhs, ElementOp&& element_op_fun) {
         if (debug_matrix) {
             assert(lhs.size() == rhs.size());
         }
         MatrixRes res{};
         foreach_index(res,
-                [&res, &lhs, &rhs, &element_op](auto i) {
-                    res[i] = element_op(lhs[i],rhs[i]);
+                [&res, &lhs, &rhs, &element_op_fun](auto i) {
+                    res[i] = element_op_fun(lhs[i],rhs[i]);
                 }
                 );
         return res;
@@ -504,9 +519,9 @@ namespace linear_algebra {
     template<class T>
     constexpr T accuracy = 1;
     template<>
-    constexpr double accuracy<double> = 0.00000001;
+    constexpr double accuracy<double> = std::numeric_limits<double>::min();
     template<>
-    constexpr float accuracy<float> = 0.000001f;
+    constexpr float accuracy<float> = std::numeric_limits<float>::min();
     template<class T>
     constexpr T accuracy<std::complex<T>> = accuracy<T>;
 
@@ -529,7 +544,7 @@ namespace linear_algebra {
                 auto base = res.column(i);
                 auto len = length(base);
                 if (is_approximate_number<element_t>) {
-                    if (len <= i*100*accuracy<element_t>) {
+                    if (len <= 1*accuracy<element_t>) {
                         len = 0;
                         res.column(i) *= 0;
                     }
@@ -606,33 +621,39 @@ namespace linear_algebra {
         return std::pair{X, A_i};
     }
 
-    template<concept_helper::matrix Matrix>
-    auto singular_value_decompose(const Matrix& A) {
+    template<
+        concept_helper::matrix MatrixS
+        >
+    auto singular_value_decompose(const concept_helper::matrix auto& A) {
         using std::sqrt;
         auto AT_A = transpose(A) * A;
         auto A_AT = A * transpose(A);
         auto [X, L] = eigenvector_matrix_and_eigenvalue_matrix(AT_A);
         auto [U_X, L_] = eigenvector_matrix_and_eigenvalue_matrix(A_AT);
         decltype(X) V{};
-        decltype(U_X) U{};
-        std::vector<std::pair<element_type<decltype(L)>, size_t>> singular_values(L.size().get_column());
+        MatrixS U{};U.resize(U_X.size());
+
+        using s_type = element_type<MatrixS>;
+        std::vector<std::pair<s_type, size_t>> singular_values(L.size().get_column());
         for (size_t i = 0; i < singular_values.size(); i++) {
-            auto s = sqrt(L[{i,i}]);
+            auto l_i_i = s_type{ L[{i, i}] };
+            auto s = sqrt(l_i_i);
             singular_values[i] = {s, i};
         }
         std::ranges::sort(singular_values, [](auto left, auto right) { return length_square(left.first) > length_square(right.first); });
-        Matrix S{};
+        MatrixS S{};S.resize(A.size());
         for (size_t i = 0; i < singular_values.size(); i++) {
             auto [s, index] = singular_values[i];
             if (s == static_cast<decltype(s)>(0)) break;
             S[{i, i}] = s;
             V.column(i) = X.column(index);
-            U.column(i) = A*V.column(i)/s;
+            divides(A*V.column(i), s, U.column(i)); // U.column(i) = A * V.column(i);
         }
         return std::tuple{U, S, transpose(V)};
     }
+    template<concept_helper::matrix MatrixS>
     auto svd(const concept_helper::matrix auto& A) {
-        return singular_value_decompose(A);
+        return singular_value_decompose<MatrixS>(A);
     }
 }
 

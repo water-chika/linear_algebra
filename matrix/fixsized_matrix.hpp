@@ -115,9 +115,9 @@ namespace linear_algebra {
         lhs = multiplies(lhs, rhs, res);
         return lhs;
 	}
-	template<class T, size_t m, size_t n>
-	auto operator*(const fixsized_matrix<T, m, n>& lhs, const fixsized_vector<T, n> v) {
-		fixsized_vector<T, m> res{};
+	template<typename T1, typename T2, size_t m, size_t n>
+	auto operator*(const fixsized_matrix<T1, m, n>& lhs, const fixsized_vector<T2, n>& v) {
+		fixsized_vector<std::invoke_result_t<std::multiplies<void>, T1, T2>, m> res{};
 		foreach_index(res,
 			[&res, &lhs, &v](auto i) {
 				res[i] = dot_product(lhs.row(i), v);

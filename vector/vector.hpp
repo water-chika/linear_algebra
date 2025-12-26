@@ -226,14 +226,20 @@ namespace linear_algebra {
         }
         return res;
     }
-    template<vectorlike Vector, class T>
-        requires std::convertible_to<T, element_type<Vector>>
-    Vector operator/(const Vector& lhs, const T& rhs) {
-        Vector res{ lhs };
+
+    template<vector_or_vector_reference Vector, class T, vector_or_vector_reference VectorRes = Vector>
+    auto divides(const Vector& lhs, const T& rhs, VectorRes&& res = {}) {
+        res = lhs;
         for (size_t i = 0; i < res.size(); i++) {
             res[i] /= rhs;
         }
-        return res;
+        return std::forward<VectorRes>(res);
+    }
+    template<vector_or_vector_reference Vector, class T>
+        requires std::convertible_to<T, element_type<Vector>>
+    Vector operator/(const Vector& lhs, const T& rhs) {
+        Vector res{};
+        return divides(lhs, rhs, res);
     }
     template<vectorlike Vector, class T>
         requires std::convertible_to<T, element_type<Vector>>
@@ -243,9 +249,9 @@ namespace linear_algebra {
         }
         return lhs;
     }
-    template<vector_reference VectorRef, class T>
-        requires std::convertible_to<T, element_type<VectorRef>>
-    auto operator/=(VectorRef lhs, const T& rhs) {
+    template<vector_reference Vector, class T>
+        requires std::convertible_to<T, element_type<Vector>>
+    Vector operator/=(Vector lhs, const T& rhs) {
         for (size_t i = 0; i < lhs.size(); i++) {
             lhs[i] /= rhs;
         }
