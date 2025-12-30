@@ -5,6 +5,13 @@
 #include <iomanip>
 #include <complex_number.hpp>
 
+    class inverse{
+    public:
+        auto operator()(auto v) {
+            return static_cast<decltype(v)>(1)/v;
+        }
+    };
+
 namespace linear_algebra {
     namespace concept_helper {
         template <class Matrix_Size>
@@ -355,12 +362,6 @@ namespace linear_algebra {
         }
     }
 
-    class inverse{
-    public:
-        auto operator()(auto v) {
-            return static_cast<decltype(v)>(1)/v;
-        }
-    };
     template<typename T>
         requires scalar<T>
     auto determinant(T x) {
@@ -379,7 +380,7 @@ namespace linear_algebra {
         typename Element_subtract = std::minus<void>,
         typename Element_multiplies = std::multiplies<void>,
         typename Element_divides = std::divides<void>,
-        typename Element_inverse = inverse,
+        typename Element_inverse = ::inverse,
         typename Element_is_invertible = is_invertible>
     auto& do_eliminate(Matrix& A,
             Element_subtract element_subtract = std::minus<void>{},
