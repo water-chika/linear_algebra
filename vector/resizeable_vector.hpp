@@ -19,10 +19,16 @@ namespace linear_algebra {
         size_t size() const {
             return m_elements.size();
         }
-        auto&& operator[](this auto&& child, size_t i) {
+        auto&& operator[](size_t i) {
+            return m_elements[i];
+        }
+        auto&& operator[](size_t i) const {
+            return m_elements[i];
+        }
+        /*auto&& operator[](this auto&& child, size_t i) {
             auto& self = parent_cast<resizeable_vector&>(child);
             return self.m_elements[i];
-        }
+        }*/
     private:
         std::vector<T> m_elements;
     };

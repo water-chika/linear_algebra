@@ -35,12 +35,18 @@ namespace linear_algebra {
                 auto [m, n] = m_matrix->size();
                 return m;
             }
-            auto&& operator[](this auto&& self, size_t i) {
+            auto&& operator[](size_t i) {
+                return m_matrix->operator[]({i, m_column_index});
+            }
+            auto&& operator[](size_t i) const {
+                return m_matrix->operator[]({i, m_column_index});
+            }
+            /*auto&& operator[](this auto&& self, size_t i) {
                 auto& ref = parent_cast<column_ref&>(self);
                 return std::forward_like<decltype(self)>(
                         ref.m_matrix->operator[]({i, ref.m_column_index})
                         );
-            }
+            }*/
         private:
             dynamic_sized_matrix* m_matrix;
             size_t m_column_index;
@@ -58,12 +64,18 @@ namespace linear_algebra {
                 auto [m, n] = m_matrix->size();
                 return n;
             }
-            auto&& operator[](this auto&& self, size_t i) {
+            auto&& operator[](size_t i) {
+                return m_matrix->operator[]({m_row_index, i});
+            }
+            auto&& operator[](size_t i) const {
+                return m_matrix->operator[]({m_row_index, i});
+            }
+            /*auto&& operator[](this auto&& self, size_t i) {
                 auto& ref = parent_cast<row_ref&>(self);
                 return std::forward_like<decltype(self)>(
                         ref.m_matrix->operator[]({ref.m_row_index, i})
                         );
-            }
+            }*/
         private:
             dynamic_sized_matrix* m_matrix;
             size_t m_row_index;
@@ -71,12 +83,22 @@ namespace linear_algebra {
         auto row(size_t i) {
             return reference_vector{row_ref{this, i}};
         }
-        auto&& operator[](this auto&& child, index_type index) {
+        auto&& operator[](index_type index) {
+            assert(index.get_column() < m_size.get_column());
+            assert(index.get_row() < m_size.get_row());
+            return m_elements[index.get_column()*m_size.get_row() + index.get_row()];
+        }
+        auto&& operator[](index_type index) const {
+            assert(index.get_column() < m_size.get_column());
+            assert(index.get_row() < m_size.get_row());
+            return m_elements[index.get_column()*m_size.get_row() + index.get_row()];
+        }
+        /*auto&& operator[](this auto&& child, index_type index) {
             auto& self = parent_cast<dynamic_sized_matrix&>(child);
             assert(index.get_column() < self.m_size.get_column());
             assert(index.get_row() < self.m_size.get_row());
             return self.m_elements[index.get_column()*self.m_size.get_row() + index.get_row()];
-        }
+        }*/
         auto size() const {
             return m_size;
         }
