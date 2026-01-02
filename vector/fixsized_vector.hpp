@@ -11,8 +11,8 @@ namespace linear_algebra {
     class fixsized_vector {
     public:
         using element_type = T;
-        template<typename T, size_t N>
-        using array = cpp_helper::array<T, N>;
+        template<typename T_, size_t N>
+        using array = cpp_helper::array<T_, N>;
 
         constexpr fixsized_vector() : m_data{} {}
         constexpr fixsized_vector(std::initializer_list<T> data) : m_data{ array_from_initializer_list(data) } {}

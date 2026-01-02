@@ -152,6 +152,7 @@ namespace linear_algebra {
         );
         return lhs;
     }
+    __device__ __host__
     bool operator==(const vectorlike auto& lhs, const vectorlike auto& rhs) {
         bool equal{lhs.size() == rhs.size()};
         for (size_t i = 0; equal && i < lhs.size(); i++) {
