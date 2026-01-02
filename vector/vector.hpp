@@ -68,6 +68,7 @@ namespace linear_algebra {
         return vector_iterator{v, v.size()};
     }
 
+    __device__ __host__
     void foreach_index(vector_or_vector_reference auto&& v, auto&& f) {
         std::remove_cvref_t<decltype(v.size())> i = 0;
         while (i < v.size()) {
@@ -139,10 +140,16 @@ namespace linear_algebra {
     auto operator*(const T& lhs, const VectorRef& rhs) {
         return rhs * lhs;
     }
+    __device__ __host__
     auto&& operator*=(vector_or_vector_reference auto&& lhs, const auto& rhs) {
-        for (auto& e : lhs) {
+        /*for (auto& e : lhs) {
             e *= rhs;
-        }
+        }*/
+        foreach_index(lhs,
+            [&lhs, &rhs](auto i) {
+                lhs[i] *= rhs;
+            }
+        );
         return lhs;
     }
     bool operator==(const vectorlike auto& lhs, const vectorlike auto& rhs) {

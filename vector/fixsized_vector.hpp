@@ -4,11 +4,16 @@
 
 #include "type_cast.hpp"
 
+#include <cpp_helper.hpp>
+
 namespace linear_algebra {
     template<class T, size_t Size>
     class fixsized_vector {
     public:
         using element_type = T;
+        template<typename T, size_t N>
+        using array = cpp_helper::array<T, N>;
+
         constexpr fixsized_vector() : m_data{} {}
         constexpr fixsized_vector(std::initializer_list<T> data) : m_data{ array_from_initializer_list(data) } {}
         template<vector_or_vector_reference Vector>
@@ -35,13 +40,17 @@ namespace linear_algebra {
                     );
         }*/
     private:
-        std::array<T, Size> array_from_initializer_list(std::initializer_list<T> data) {
-            assert(data.size() == Size);
-            std::array<T, Size> res{};
-            std::ranges::copy(data, res.begin());
+        __device__ __host__
+        array<T, Size> array_from_initializer_list(std::initializer_list<T> data) {
+            array<T, Size> res{};
+            auto ite = data.begin();
+            for (uint32_t i = 0; i < data.size(); i++) {
+                res[i] = *ite;
+                ++ite;
+            }
             return res;
         }
-        std::array<T, Size> m_data;
+        array<T, Size> m_data;
     };
     template<class T, size_t Size>
     class fixsized_pointer_vector {
@@ -76,7 +85,6 @@ namespace linear_algebra {
         }*/
     private:
         std::array<T*, Size> array_from_initializer_list(std::initializer_list<T*> data) {
-            assert(data.size() == Size);
             std::array<T*, Size> res{};
             std::ranges::copy(data, res.begin());
             return res;
