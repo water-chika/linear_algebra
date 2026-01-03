@@ -45,18 +45,22 @@ namespace linear_algebra {
     struct vector_iterator {
         Vector& v;
         size_t index;
+        __device__ __host__
         vector_iterator& operator++() {
             ++index;
             return *this;
         }
+        __device__ __host__
         vector_iterator operator++(int) {
             auto res = *this;
             index++;
             return res;
         }
+        __device__ __host__
         auto& operator*() {
             return v[index];
         }
+        __device__ __host__
         bool operator==(const vector_iterator& lhs) const {
             return (&v) == (&lhs.v) && index == lhs.index;
         }
@@ -122,21 +126,25 @@ namespace linear_algebra {
     }
     template<vectorlike Vector, class T>
         requires std::same_as<element_type<Vector>, T>
+    __device__ __host__
     Vector operator*(const Vector& lhs, const T& rhs) {
         return multiplies(lhs, rhs);
     }
     template<vector_reference VectorRef, class T>
         requires std::same_as<element_type<VectorRef>, T>
+    __device__ __host__
     auto operator*(const VectorRef& lhs, const T& rhs) {
         return multiplies(lhs, rhs, referenced_type<VectorRef>{});
     }
     template<vectorlike Vector, class T>
         requires std::same_as<element_type<Vector>, T>
+    __device__ __host__
     Vector operator*(const T& lhs, const Vector& rhs) {
         return rhs * lhs;
     }
     template<vector_reference VectorRef, class T>
         requires std::same_as<element_type<VectorRef>, T>
+    __device__ __host__
     auto operator*(const T& lhs, const VectorRef& rhs) {
         return rhs * lhs;
     }
@@ -160,26 +168,23 @@ namespace linear_algebra {
         }
         return equal;
     }
+    __device__ __host__
     vectorlike auto operator+(const vectorlike auto& lhs, const vectorlike auto& rhs) {
-        if (lhs.size() != rhs.size()) {
-            throw std::runtime_error{ "size not equal" };
-        }
         auto res{lhs};
         for (size_t i = 0; i < lhs.size(); i++) {
             res[i] += rhs[i];
         }
         return res;
     }
+    __device__ __host__
     vectorlike auto operator-(const vectorlike auto& lhs, const vectorlike auto& rhs) {
-        if (lhs.size() != rhs.size()) {
-            throw std::runtime_error{ "size not equal" };
-        }
         auto res{ lhs };
         for (size_t i = 0; i < res.size(); i++) {
             res[i] -= rhs[i];
         }
         return res;
     }
+    __device__ __host__
     vectorlike auto operator-(const vectorlike auto& lhs) {
         auto res{ lhs };
         for (size_t i = 0; i < res.size(); i++) {
@@ -187,19 +192,15 @@ namespace linear_algebra {
         }
         return res;
     }
+    __device__ __host__
     auto&& operator+=(vector_or_vector_reference auto&& lhs, const vector_or_vector_reference auto& rhs) {
-        if (lhs.size() != rhs.size()) {
-            throw std::runtime_error{ "size not equal" };
-        }
         for (size_t i = 0; i < lhs.size(); i++) {
             lhs[i] += rhs[i];
         }
         return std::forward<decltype(lhs)>(lhs);
     }
+    __device__ __host__
     auto&& operator-=(vector_or_vector_reference auto&& lhs, const vector_or_vector_reference auto& rhs) {
-        if (lhs.size() != rhs.size()) {
-            throw std::runtime_error{ "size not equal" };
-        }
         for (size_t i = 0; i < lhs.size(); i++) {
             lhs[i] -= rhs[i];
         }
@@ -209,25 +210,21 @@ namespace linear_algebra {
         typename Element_add = std::plus<void>,
         typename Element_multiplies = std::multiplies<void>
         >
+    __device__ __host__
     auto dot_product(
             const vector_or_vector_reference auto& lhs,
             const vector_or_vector_reference auto& rhs,
             Element_add&& element_add = std::plus<void>{},
             Element_multiplies&& element_multiplies = std::multiplies<void>{}
             ) {
-        if (lhs.size() != rhs.size()) {
-            throw std::runtime_error{ "size not equal" };
-        }
         auto res{ element_multiplies(lhs[0], rhs[0]) };
         for (size_t i = 1; i < lhs.size(); i++) {
             res = element_add(res, element_multiplies(lhs[i], rhs[i]));
         }
         return res;
     }
+    __device__ __host__
     auto element_multi(const vectorlike auto& lhs, const vectorlike auto& rhs) {
-        if (lhs.size() != rhs.size()) {
-            throw std::runtime_error{ "size not equal" };
-        }
         auto res{ lhs };
         for (size_t i = 0; i < lhs.size(); i++) {
             res[i] *= rhs[i];
@@ -236,6 +233,7 @@ namespace linear_algebra {
     }
 
     template<vector_or_vector_reference Vector, class T, vector_or_vector_reference VectorRes = Vector>
+    __device__ __host__
     auto divides(const Vector& lhs, const T& rhs, VectorRes&& res = {}) {
         res = lhs;
         for (size_t i = 0; i < res.size(); i++) {
@@ -245,12 +243,14 @@ namespace linear_algebra {
     }
     template<vector_or_vector_reference Vector, class T>
         requires std::convertible_to<T, element_type<Vector>>
+    __device__ __host__
     Vector operator/(const Vector& lhs, const T& rhs) {
         Vector res{};
         return divides(lhs, rhs, res);
     }
     template<vectorlike Vector, class T>
         requires std::convertible_to<T, element_type<Vector>>
+    __device__ __host__
     Vector& operator/=(Vector& lhs, const T& rhs) {
         for (size_t i = 0; i < lhs.size(); i++) {
             lhs[i] /= rhs;
@@ -259,6 +259,7 @@ namespace linear_algebra {
     }
     template<vector_reference Vector, class T>
         requires std::convertible_to<T, element_type<Vector>>
+    __device__ __host__
     Vector operator/=(Vector lhs, const T& rhs) {
         for (size_t i = 0; i < lhs.size(); i++) {
             lhs[i] /= rhs;
@@ -279,17 +280,22 @@ namespace linear_algebra {
 
     using complex_number::length_square;
     template<vector_or_vector_reference Vector>
+    __device__ __host__
     auto length_square(const Vector& v) {
         element_type<Vector> t{0};
         auto len_2 = length_square(t);
-        for (auto e : v) {
-            len_2 += length_square(e);
+        for (uint32_t i = 0; i < v.size(); i++) {
+            len_2 += length_square(v[i]);
         }
+        /*for (auto e : v) {
+            len_2 += length_square(e);
+        }*/
         return len_2;
     }
 
     using std::sqrt;
     template<vector_or_vector_reference Vector>
+    __device__ __host__
     auto length(const Vector& v) {
         return sqrt(length_square(v));
     }
