@@ -9,23 +9,34 @@ namespace linear_algebra{
         size_t row;
         using element_type = typename T::element_type;
         using referenced_type = Vector;
+        __device__ __host__
         size_t size() const {
             return A.size().get_column();
         }
+        __device__ __host__
         auto& operator[](size_t i) {
             return A[A.size().set_column(i).set_row(row)];
         }
+        __device__ __host__
         auto operator[](size_t i) const {
             return A[A.size().set_column(i).set_row(row)];
         }
-
-        auto& operator=(const vector_or_vector_reference auto& rhs) {
+        __device__ __host__
+        auto& copy_vector(const vector_or_vector_reference auto& rhs) {
             foreach_index(*this,
                     [this, &rhs](auto i) {
                         this->operator[](i) = rhs[i];
                     }
                     );
             return *this;
+        }
+        __device__ __host__
+        auto& operator=(const vector_or_vector_reference auto& rhs) {
+            return copy_vector(rhs);
+        }
+        __device__ __host__
+        auto& operator=(const row_type& rhs) {
+            return copy_vector(rhs);
         }
     };
     template<class T, class U>
@@ -38,19 +49,22 @@ namespace linear_algebra{
         using index_type = typename M1::index_type;
         using left_matrix_type = M1;
         using right_matrix_type = M2;
+        __device__ __host__
         combined_reference_matrix(M1& left, M2& right)
             : left_half{left}, right_half{right}
         {
             assert(left_half.size().get_row()
                     == right_half.size().get_row());
         }
+        __device__ __host__
         auto size() {
             auto l_size = left_half.size();
             auto r_size = right_half.size();
             auto res = l_size;
             return res.set_column(l_size.get_column()+r_size.get_column());
         }
-        auto& column(size_t i) {
+        __device__ __host__
+        auto column(size_t i) {
             const auto l_size = left_half.size().get_column();
             if (i < l_size) {
                 return left_half.column(i);
@@ -59,6 +73,7 @@ namespace linear_algebra{
                 return right_half.column(i-l_size);
             }
         }
+        __device__ __host__
         auto row(size_t i) {
             return
                 row_type<
@@ -71,6 +86,7 @@ namespace linear_algebra{
                 >
                 {*this, i};
         }
+        __device__ __host__
         auto row(size_t i) const {
             return
                 row_type<
@@ -95,6 +111,7 @@ namespace linear_algebra{
                 >
                 {self, i};
         }*/
+        __device__ __host__
         auto& operator[](index_type i) {
             auto l_size = left_half.size().get_column();
             if (i.get_column() < l_size) {
@@ -115,6 +132,7 @@ namespace linear_algebra{
         typename Element_divides = std::divides<void>,
         typename Element_inverse = inverse,
         typename Element_is_invertible = is_invertible>
+    __device__ __host__
     auto inverse(concept_helper::matrix auto A,
             Element_subtract element_subtract = std::minus<void>{},
             Element_multiplies element_multiplies = std::multiplies<void>{},

@@ -5,6 +5,8 @@
 #include <iomanip>
 #include <complex_number.hpp>
 
+#include <cpp_helper.hpp>
+
     class inverse{
     public:
         auto operator()(auto v) {
@@ -46,28 +48,35 @@ namespace linear_algebra {
     };
     template<class T, class U>
     struct matrix_index {
+        __device__ __host__
         constexpr auto set_row(T row) {
             m_row = row;
             return *this;
         }
+        __device__ __host__
         constexpr auto set_column(T column) {
             m_column = column;
             return *this;
         }
+        __device__ __host__
         constexpr auto get_row() const {
             return m_row;
         }
+        __device__ __host__
         constexpr auto get_column() const {
             return m_column;
         }
 
+        __device__ __host__
         matrix_index() = default;
 
+        __device__ __host__
         matrix_index(T r, U c) 
         : m_row{r}, m_column{c}
         {}
 
         template<class T_, class U_>
+        __device__ __host__
         matrix_index(matrix_index<T_,U_> i) 
         : m_row{i.m_row}, m_column{i.m_column}
         {}
@@ -90,6 +99,7 @@ namespace linear_algebra {
     constexpr size_t fixsized_matrix_column_count = 0;
 
     template<class T>
+    __device__ __host__
     void iterate_from_0_to(T end, auto&& f) {
         for (T i = 0; i < end; i++) {
             f(i);
@@ -97,6 +107,7 @@ namespace linear_algebra {
     }
     template<concept_helper::matrix Matrix, class F>
         requires std::invocable<F, typename Matrix::index_type>
+    __device__ __host__
     void foreach_index(Matrix& A, F fn) {
         auto [row, column] = A.size();
         iterate_from_0_to(row,
@@ -111,6 +122,7 @@ namespace linear_algebra {
     }
     template<concept_helper::matrix_index MatrixIndex, class F>
         requires std::invocable<F, MatrixIndex>
+    __device__ __host__
     void foreach_index(MatrixIndex size, F fn) {
         auto [row, column] = size;
         iterate_from_0_to(row,
@@ -125,6 +137,7 @@ namespace linear_algebra {
 
     template<concept_helper::matrix Matrix, class F>
         requires std::invocable<F, element_type<Matrix>&>
+    __device__ __host__
     void foreach_element(Matrix& A, F fn) {
         auto [row, column] = A.size();
         iterate_from_0_to(row,
@@ -139,6 +152,7 @@ namespace linear_algebra {
     }
     template<concept_helper::matrix Matrix1, concept_helper::matrix Matrix2, class F>
         requires std::invocable<F, element_type<Matrix1>&, element_type<Matrix2>&>
+    __device__ __host__
     void foreach_element(Matrix1& A, Matrix2& B, F fn) {
         auto [row, column] = A.size();
         assert(A.size() == B.size());
@@ -153,9 +167,11 @@ namespace linear_algebra {
             }
         );
     }
+    __device__ __host__
     bool operator==(const concept_helper::matrix_index auto& i, const concept_helper::matrix_index auto& j) {
         return i.get_column() == j.get_column() && i.get_row() == j.get_row();
     }
+    __device__ __host__
     bool operator==(const concept_helper::matrix auto& A, const concept_helper::matrix auto& B) {
         if (A.size() != B.size()) {
             return false;
@@ -223,6 +239,7 @@ namespace linear_algebra {
         concept_helper::matrix MatrixRhs,
         concept_helper::matrix MatrixRes = MatrixLhs,
         class ElementMultiplies = std::multiplies<void>>
+    __device__ __host__
     auto element_multiplies(const MatrixLhs& lhs, const MatrixRhs& rhs, ElementMultiplies&& element_mul = ElementMultiplies{}) {
         return element_op(lhs, rhs, element_mul);
     }
@@ -250,6 +267,7 @@ namespace linear_algebra {
     }
 
     template<linear_algebra::concept_helper::matrix Matrix>
+    __device__ __host__
     auto operator*(
             Matrix&& A,
             element_type<Matrix> t) {
@@ -260,6 +278,7 @@ namespace linear_algebra {
         return B;
     }
     template<linear_algebra::concept_helper::matrix Matrix>
+    __device__ __host__
     auto operator*(
             element_type<Matrix> t,
             Matrix&& A) {
@@ -309,6 +328,7 @@ namespace linear_algebra {
         typename Element_add = std::plus<void>,
         typename Element_multiplies = std::multiplies<void>
             >
+    __device__ __host__
     auto&& multiplies(
             MatrixLhs&& lhs,
             MatrixRhs&& rhs,
@@ -329,6 +349,7 @@ namespace linear_algebra {
                 });
         return std::forward<MatrixRes>(res);
     }
+    __device__ __host__
     auto operator*(
             linear_algebra::concept_helper::matrix auto&& A,
             linear_algebra::concept_helper::matrix auto&& B) {
@@ -356,6 +377,7 @@ namespace linear_algebra {
     }
 
     template<std::integral Int>
+    __device__ __host__
     void for_index_range(std::convertible_to<Int> auto&& begin, Int end, std::invocable<Int> auto&& f) {
         for (Int i = begin; i < end; i++) {
             f(i);
@@ -364,17 +386,17 @@ namespace linear_algebra {
 
     template<typename T>
         requires scalar<T>
+    __device__ __host__
     auto determinant(T x) {
         return x;
     }
     class is_invertible{
     public:
+        __device__ __host__
         auto operator()(auto v) {
             return determinant(v) != decltype(determinant(v)){0};
         }
     };
-
-    constexpr auto debug_matrix_eliminate = false;
 
     template<concept_helper::matrix Matrix,
         typename Element_subtract = std::minus<void>,
@@ -382,6 +404,7 @@ namespace linear_algebra {
         typename Element_divides = std::divides<void>,
         typename Element_inverse = ::inverse,
         typename Element_is_invertible = is_invertible>
+    __device__ __host__
     auto& do_eliminate(Matrix& A,
             Element_subtract element_subtract = std::minus<void>{},
             Element_multiplies element_multiplies = std::multiplies<void>{},
@@ -389,9 +412,6 @@ namespace linear_algebra {
             Element_inverse element_inverse = inverse{},
             Element_is_invertible element_is_invertible = is_invertible{}
             ) {
-        if (debug_matrix_eliminate) {
-            std::cout << A << std::endl;
-        }
         auto [row_count, column_count] = A.size();
         for_index_range(0, std::min(row_count, column_count),
             [&A,
@@ -399,22 +419,18 @@ namespace linear_algebra {
              &element_multiplies,
              &element_divides,
              &element_inverse,
-             &element_is_invertible](auto column) {
+             &element_is_invertible] __device__ __host__ (auto column) {
                 if (!element_is_invertible(A[{column, column}])) {
                     for (decltype(column) row = column + 1; row < A.size().get_row(); row++) {
                         if (element_is_invertible(A[{row, column}])) {
-                            swap(A.row(column), A.row(row));
-                            if (debug_matrix_eliminate) {
-                                std::cout << "swap rows: " << column << ", " << row << std::endl;
-                                std::cout << A << std::endl;
-                            }
+                            cpp_helper::swap(A.row(column), A.row(row));
                             break;
                         }
                     }
                 }
                 if (element_is_invertible(A[{column, column}])) {
                     for_index_range(column + 1, A.size().get_row(),
-                        [&A, &element_subtract, &element_multiplies, &element_divides, column](auto row) {
+                        [&A, &element_subtract, &element_multiplies, &element_divides, column] __device__ __host__ (auto row) {
                             auto pivot = A[{column, column}];
                             auto multier = element_divides(A[{row, column}] , pivot);
                             A.row(row) = 
@@ -424,32 +440,25 @@ namespace linear_algebra {
                                     {},
                                     element_subtract
                                 );
-                            if (debug_matrix_eliminate) {
-                                std::cout << "row " << row << " subtract row " << column << " * " << multier << std::endl;
-                                std::cout << A << std::endl;
-                            }
                         });
-                }
-                if (debug_matrix_eliminate) {
-                    std::cout << A << std::endl;
                 }
             }
         );
         return A;
     }
     template<concept_helper::matrix Matrix>
+    __device__ __host__
     Matrix eliminate(Matrix A) {
         return do_eliminate(A);
     }
 
-    constexpr auto debug_matrix_back_substitution = false;
-    
     template<concept_helper::matrix Matrix,
         typename Element_subtract = std::minus<void>,
         typename Element_multiplies = std::multiplies<void>,
         typename Element_divides = std::divides<void>,
         typename Element_inverse = inverse,
         typename Element_is_invertible = is_invertible>
+    __device__ __host__
     auto& do_back_substitution(Matrix& A,
             Element_subtract element_subtract = std::minus<void>{},
             Element_multiplies element_multiplies = std::multiplies<void>{},
@@ -475,7 +484,7 @@ namespace linear_algebra {
                 else {
                     auto pivot = A[std::remove_cvref_t<decltype(A.size())>{}.set_row(row).set_column(row)];
                     if (!element_is_invertible(pivot)) {
-                        throw std::runtime_error{ std::format("matrix is not invertible") };
+                        //throw std::runtime_error{ std::format("matrix is not invertible") };
                     }
                     auto inv_pivot = element_inverse(pivot);
                     A.row(row) = multiplies(
@@ -496,6 +505,7 @@ namespace linear_algebra {
         return A;
     }
     template<concept_helper::matrix Matrix>
+    __device__ __host__
     Matrix back_substitution(Matrix A) {
         return do_back_substitution(A);
     }
@@ -577,6 +587,7 @@ namespace linear_algebra {
     };
 
     template<concept_helper::matrix Matrix>
+    __device__ __host__
     auto determinant(Matrix A) {
         auto U = eliminate(A);
         auto res = unit_value<std::remove_cvref_t<decltype(U[{0, 0}])>>;
@@ -656,6 +667,69 @@ namespace linear_algebra {
     auto svd(const concept_helper::matrix auto& A) {
         return singular_value_decompose<MatrixS>(A);
     }
+
+    template<typename Matrix>
+    class column_ref {
+    public:
+        using element_type = Matrix::element_type;
+        __device__ __host__
+        column_ref(Matrix& m, size_t i)
+            : m_matrix{m}, m_column_index{i}
+        {}
+        __device__ __host__
+        auto size() const {
+            auto [m, n] = m_matrix.size();
+            return m;
+        }
+        __device__ __host__
+        auto&& operator[](size_t i) {
+            return m_matrix[{i, m_column_index}];
+        }
+        __device__ __host__
+        auto&& operator[](size_t i) const {
+            return m_matrix[{i, m_column_index}];
+        }
+        /*auto&& operator[](this auto&& self, size_t i) {
+            auto& ref = parent_cast<column_ref&>(self);
+            return std::forward_like<decltype(self)>(
+                    ref.m_matrix->operator[]({i, ref.m_column_index})
+                    );
+        }*/
+    private:
+        Matrix& m_matrix;
+        size_t m_column_index;
+    };
+    template<typename Matrix>
+    class row_ref {
+    public:
+        using element_type = Matrix::element_type;
+        __device__ __host__
+        row_ref(Matrix& m, size_t i)
+            : m_matrix{m}, m_row_index{i}
+        {}
+        __device__ __host__
+        auto size() const {
+            auto [m, n] = m_matrix.size();
+            return n;
+        }
+        __device__ __host__
+        auto&& operator[](size_t i) {
+            return m_matrix[{m_row_index, i}];
+        }
+        __device__ __host__
+        auto&& operator[](size_t i) const {
+            return m_matrix[{m_row_index, i}];
+        }
+        /*auto&& operator[](this auto&& self, size_t i) {
+            auto& ref = parent_cast<row_ref&>(self);
+            return std::forward_like<decltype(self)>(
+                    ref.m_matrix->operator[]({ref.m_row_index, i})
+                    );
+        }*/
+    private:
+        Matrix& m_matrix;
+        size_t m_row_index;
+    };
 }
 
 template<linear_algebra::concept_helper::matrix Matrix>

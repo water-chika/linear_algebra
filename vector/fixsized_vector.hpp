@@ -14,9 +14,12 @@ namespace linear_algebra {
         template<typename T_, size_t N>
         using array = cpp_helper::array<T_, N>;
 
+        __device__ __host__
         constexpr fixsized_vector() : m_data{} {}
+        __device__ __host__
         constexpr fixsized_vector(std::initializer_list<T> data) : m_data{ array_from_initializer_list(data) } {}
         template<vector_or_vector_reference Vector>
+        __device__ __host__
         constexpr fixsized_vector(Vector v) : m_data{}
         {
             assert(v.size() == Size);
@@ -24,12 +27,15 @@ namespace linear_algebra {
                 m_data[i] = v[i];
             }
         }
+        __device__ __host__
         constexpr size_t size() const {
             return Size;
         }
+        __device__ __host__
         constexpr auto&& operator[](size_t i) {
             return m_data[i];
         }
+        __device__ __host__
         constexpr auto&& operator[](size_t i) const {
             return m_data[i];
         }

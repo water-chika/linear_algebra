@@ -98,6 +98,7 @@ namespace linear_algebra {
         typename Res = target_type<Lhs>,
         typename Element_mul = std::multiplies<void>
             >
+    __device__ __host__
     auto multiplies(const Lhs& lhs, const element_type<Lhs>& rhs,
             Res&& res = Res{}, Element_mul&& element_mul = std::multiplies<void>{}) {
         res = lhs;
@@ -114,6 +115,7 @@ namespace linear_algebra {
         typename Res = target_type<Lhs>,
         typename Element_sub = std::minus<void>
             >
+    __device__ __host__
     auto subtract(const Lhs& lhs, const Rhs& rhs,
             Res&& res = Res{}, Element_sub&& element_sub = std::minus<void>{}) {
         res = lhs;
@@ -263,6 +265,13 @@ namespace linear_algebra {
     Vector operator/=(Vector lhs, const T& rhs) {
         for (size_t i = 0; i < lhs.size(); i++) {
             lhs[i] /= rhs;
+        }
+        return lhs;
+    }
+    __device__ __host__
+    auto& copy_vector(vector_or_vector_reference auto& lhs, vector_or_vector_reference auto& rhs) {
+        for (size_t i = 0; i < lhs.size(); i++) {
+            lhs[i] = rhs[i];
         }
         return lhs;
     }

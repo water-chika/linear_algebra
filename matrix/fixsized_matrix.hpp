@@ -2,6 +2,7 @@
 
 #include <algorithm>
 #include <vector/fixsized_vector.hpp>
+#include <vector/reference_vector.hpp>
 
 namespace linear_algebra {
 	
@@ -14,11 +15,18 @@ namespace linear_algebra {
         using element_type = T;
 		using index_type = fixsized_matrix_index;
 
+		template<typename T_, size_t N>
+		using array = cpp_helper::array<T_, N>;
+
+		__device__ __host__
 		constexpr fixsized_matrix()
 			: m_columns{} {}
+		__device__ __host__
 		constexpr fixsized_matrix(std::initializer_list<std::initializer_list<T>> row_list)
 			: m_columns{ create_columns_from_rows(row_list) } {}
+		__device__ __host__
 		constexpr fixsized_matrix(std::array<column_vector<T, ROW>, COLUMN> columns) : m_columns{ columns } {}
+		__device__ __host__
 		constexpr fixsized_matrix(std::initializer_list<column_vector<T, ROW>> columns) : m_columns{} {
 			size_t i = 0;
 			for (auto col : columns) {
@@ -26,6 +34,7 @@ namespace linear_algebra {
 				i++;
 			}
 		}
+		__device__ __host__
         constexpr fixsized_matrix(identity_matrix_type I) : m_columns{} {
             for (size_t i = 0; i < COLUMN; i++) {
                 for (size_t j = 0; j < ROW; j++) {
@@ -34,35 +43,29 @@ namespace linear_algebra {
             }
         }
 
-        auto&& column(size_t i) {
-            return m_columns[i];
+		__device__ __host__
+		auto column(size_t i) {
+            return reference_vector{column_ref{*this, i}};
         }
-        auto&& column(size_t i) const {
-            return m_columns[i];
+		__device__ __host__
+		auto column(size_t i) const {
+            return reference_vector{column_ref{*this, i}};
         }
-        /*auto&& column(this auto&& self, size_t i) {
-            return std::forward_like<decltype(self)>(
-                        parent_cast<fixsized_matrix&>(self)
-                        .m_columns[i]
-                    );
-        }*/
-		auto row(size_t i) {
-			fixsized_pointer_vector<T, COLUMN> res{};
-			for (size_t j = 0; j < COLUMN; j++) {
-				res.set(j, &m_columns[j][i]);
-			}
-			return res;
-		}
-		const auto row(size_t i) const {
-			fixsized_pointer_vector<const T, COLUMN> res{};
-			for (size_t j = 0; j < COLUMN; j++) {
-				res.set(j, &m_columns[j][i]);
-			}
-			return res;
-		}
+
+		__device__ __host__
+        auto row(size_t i) {
+            return reference_vector{row_ref{*this, i}};
+        }
+		__device__ __host__
+        auto row(size_t i) const {
+            return reference_vector{row_ref{*this, i}};
+        }
+
+		__device__ __host__
         auto&& operator[](fixsized_matrix_index i) {
             return m_columns[i.get_column()][i.get_row()];
         }
+		__device__ __host__
         auto&& operator[](fixsized_matrix_index i) const {
             return m_columns[i.get_column()][i.get_row()];
         }
@@ -72,15 +75,17 @@ namespace linear_algebra {
                     .m_columns[i.get_column()][i.get_row()]
                     );
         }*/
+	   __device__ __host__
 		static constexpr auto size() {
 			return fixsized_matrix_index{ ROW, COLUMN };
 		}
+		__device__ __host__
         static constexpr auto resize(index_type s) {
-            assert(s.get_row() == ROW && s.get_column() == COLUMN);
+            //assert(s.get_row() == ROW && s.get_column() == COLUMN);
         }
 	private:
 		static auto create_columns_by_get_element(auto&& get_element) {
-			std::array<fixsized_vector<T, ROW>, COLUMN> columns{};
+			array<fixsized_vector<T, ROW>, COLUMN> columns{};
 			for (size_t col = 0; col < COLUMN; col++) {
 				for (size_t row = 0; row < ROW; row++) {
 					columns[col][row] = get_element(row, col);
@@ -88,8 +93,9 @@ namespace linear_algebra {
 			}
 			return columns;
 		}
+		__device__ __host__
 		static auto create_columns_from_rows(auto&& rows) {
-			std::array<fixsized_vector<T, ROW>, COLUMN> columns{};
+			array<fixsized_vector<T, ROW>, COLUMN> columns{};
 			size_t row_index = 0;
 			for (auto row : rows) {
 				size_t col_index = 0;
@@ -101,7 +107,7 @@ namespace linear_algebra {
 			}
 			return columns;
 		}
-		std::array<fixsized_vector<T, ROW>, COLUMN> m_columns;
+		array<fixsized_vector<T, ROW>, COLUMN> m_columns;
 	};
 
 	template<class T, size_t COLUMN, size_t ROW>
@@ -117,19 +123,23 @@ namespace linear_algebra {
 	}
 
 	template<class T, size_t m, size_t n, size_t p>
+	__device__ __host__
 	auto operator*(const fixsized_matrix<T, m, n>& lhs, const fixsized_matrix<T, n, p>& rhs) {
         fixsized_matrix<T, m, p> res;
         return multiplies(lhs, rhs, res);
 	}
 	template<class T, size_t m, size_t n>
+	__device__ __host__
 	auto& operator*=(fixsized_matrix<T, m, n>& lhs, fixsized_matrix<T, n, n> rhs) {
         fixsized_matrix<T, m, n> res;
         lhs = multiplies(lhs, rhs, res);
         return lhs;
 	}
-	template<typename T1, typename T2, size_t m, size_t n>
-	auto operator*(const fixsized_matrix<T1, m, n>& lhs, const fixsized_vector<T2, n>& v) {
-		fixsized_vector<std::invoke_result_t<std::multiplies<void>, T1, T2>, m> res{};
+	template<typename T, size_t m, size_t n>
+	__device__ __host__
+	auto operator*(const fixsized_matrix<T, m, n>& lhs, const vector_or_vector_reference auto& v) {
+		//assert(v.size() == n);
+		fixsized_vector<std::invoke_result_t<std::multiplies<void>, T, element_type<decltype(v)>>, m> res{};
 		foreach_index(res,
 			[&res, &lhs, &v](auto i) {
 				res[i] = dot_product(lhs.row(i), v);

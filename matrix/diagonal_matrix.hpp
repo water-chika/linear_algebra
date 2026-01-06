@@ -38,8 +38,7 @@ namespace linear_algebra{
         auto B = A;
         for (size_t i = 0; i < SIZE; i++) {
             auto d = D[{i,i}];
-            auto& c = B.column(i);
-            c *= d;
+            B.column(i) *= d;
         }
         return B;
     }

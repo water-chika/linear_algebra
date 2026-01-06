@@ -8,20 +8,26 @@ namespace linear_algebra {
     class resizeable_vector {
     public:
         using element_type = T;
+        __device__ __host__
         resizeable_vector() : m_elements{} {}
+        __device__ __host__
         resizeable_vector(std::initializer_list<T> data) : m_elements{ data } {}
+        __device__ __host__
         resizeable_vector(vector_or_vector_reference auto& v) : m_elements(v.size())
         {
             for (size_t i = 0; i < v.size(); i++) {
                 m_elements[i] = v[i];
             }
         }
+        __device__ __host__
         size_t size() const {
             return m_elements.size();
         }
+        __device__ __host__
         auto&& operator[](size_t i) {
             return m_elements[i];
         }
+        __device__ __host__
         auto&& operator[](size_t i) const {
             return m_elements[i];
         }
@@ -34,32 +40,4 @@ namespace linear_algebra {
     };
     template<class T>
     constexpr bool is_vector_type<resizeable_vector<T>> = true;
-
-    template<class T>
-    class reference_vector {
-    public:
-        using element_type = T::element_type;
-        using referenced_type = resizeable_vector<element_type>;
-        reference_vector(T ref) : m_ref{ref} {}
-        auto& operator=(const vector_or_vector_reference auto& v) {
-            assert(size() == v.size());
-            for (size_t i = 0; i < size(); i++) {
-                this->operator[](i) = v[i];
-            }
-            return *this;
-        }
-        size_t size() const {
-            return m_ref.size();
-        }
-        auto& operator[](size_t i) {
-            return m_ref[i];
-        }
-        const auto& operator[](size_t i) const {
-            return m_ref[i];
-        }
-    private:
-        T m_ref;
-    };
-    template<class T>
-    constexpr bool is_vector_reference_type<reference_vector<T>> = true;
 }
